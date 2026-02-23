@@ -120,16 +120,22 @@ _generatedMonsters.sort((a, b) => a.baseVal - b.baseVal);
 
 const MONSTERS = [];
 _generatedMonsters.forEach((m, idx) => {
-    const scale = 1 + idx * 0.15; // Flatten curve slightly since we have more variants total
+    // Make late game drastically harder by using an exponential baseline.
+    // idx goes up to 69 (14 base monsters * 5 variants).
+    // idx / 7 evaluates to floor 0 ~ 9 roughly.
+    const floorRaw = idx / 7;
+    // Base scale slowly grows, but adds exponential growth for late game
+    const scale = 1 + floorRaw * 0.2 + Math.pow(1.3, floorRaw) * 0.15;
+
     const statsMult = MONSTER_STATS_MULT[m.imgIndex] || { hp: 1, atk: 1, agi: 1 };
 
     MONSTERS.push({
         name: m.name,
-        level: Math.floor(idx / 7) + 1, // Divide by 7 since total is 14*5 = 70. 70/7 = 10 floors
-        hp: Math.floor(15 * scale * statsMult.hp),
-        atk: Math.floor(5 * scale * statsMult.atk),
-        agi: Math.floor((5 + idx * 0.25) * statsMult.agi),
-        exp: Math.floor(10 * scale),
+        level: Math.floor(floorRaw) + 1,
+        hp: Math.floor(25 * scale * statsMult.hp),
+        atk: Math.floor(8 * scale * statsMult.atk),
+        agi: Math.floor((5 + floorRaw * 2.5) * statsMult.agi),
+        exp: Math.floor(15 * scale * statsMult.hp),
         imgIndex: m.imgIndex,
         svg: m.svgStr
     });
@@ -984,7 +990,7 @@ class Game {
                             id: 'monster-0',
                             name: "狂乱の剣士",
                             originalName: "狂乱の剣士",
-                            hp: 400, maxHp: 400, currentHp: 400, atk: 60, agi: 25, exp: 300, level: 7,
+                            hp: 1500, maxHp: 1500, currentHp: 1500, atk: 120, agi: 45, exp: 900, level: 7,
                             svg: `<img src="assets/event_7mad.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.2);" />`
                         }],
                         turnOrder: [],
@@ -1079,7 +1085,7 @@ class Game {
                             id: 'monster-0',
                             name: "怒りのキングゴブリン",
                             originalName: "怒りのキングゴブリン",
-                            hp: 350, maxHp: 350, currentHp: 350, atk: 55, agi: 15, exp: 250, level: 6,
+                            hp: 900, maxHp: 900, currentHp: 900, atk: 95, agi: 25, exp: 600, level: 6,
                             svg: `<img src="assets/event_6parent_enemy.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.5);" />`
                         }],
                         turnOrder: [],
@@ -1316,9 +1322,10 @@ class Game {
         let bossData = {
             ...baseMonster,
             name: 'アビスロード',
-            hp: 3000,
-            atk: 60,
-            exp: 10000,
+            hp: 8500,
+            atk: 180,
+            agi: 60,
+            exp: 30000,
             level: 10,
             id: 'monster-0'
         };
