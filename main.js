@@ -211,6 +211,23 @@ for (let i = 0; i < 10; i++) {
             }
         }
     }
+
+    // Seed fixed floor events for 3F(2), 4F(3), 5F(4), 6F(5), 7F(6), 8F(7), and 9F(8)
+    if (i >= 2 && i <= 8) {
+        let emptySpots = [];
+        for (let r = 1; r < map.length - 1; r++) {
+            for (let c = 1; c < map[r].length - 1; c++) {
+                // Find safe, empty spots that are not stairs or boss
+                if (map[r][c] === 0 && !(r === 1 && c === 1) && map[r][c] !== 2 && map[r][c] !== 3 && map[r][c] !== 8) {
+                    emptySpots.push({ r, c });
+                }
+            }
+        }
+        if (emptySpots.length > 0) {
+            let spot = emptySpots[Math.floor(Math.random() * emptySpots.length)];
+            map[spot.r][spot.c] = 9; // 9 = Event NPC
+        }
+    }
     LEVELS.push(map);
 }
 
@@ -320,6 +337,12 @@ class Game {
 
         this.currentBattle = null;
         this.turnIndex = 0;
+        this.npcFlags = {
+            helpedAdventurer: false, event5FDone: false, event9FDone: false,
+            metSwordsman: false, event3FDone: false, event7FDone: false,
+            savedGoblin: false, friendGoblin: false, event4FDone: false, event6FDone: false,
+            event8FDone: false
+        };
 
         this.init();
     }
@@ -447,6 +470,15 @@ class Game {
 
     startStory() {
         audio.unlockAudio();
+
+        // Update base stats to include allocated bonus points (used for equipment requirements)
+        this.party.forEach(p => {
+            p.baseStr = p.str;
+            p.baseInt = p.int;
+            p.baseVit = p.vit;
+            p.baseAgi = p.agi;
+            p.baseLuk = p.luk;
+        });
 
         document.getElementById('char-create-screen').style.display = 'none';
         document.getElementById('story-screen').style.display = 'flex';
@@ -680,6 +712,25 @@ class Game {
         } else if (tile === 8) { // Boss Tile
             this.addLog("圧倒的な邪悪な気配を感じる...!!");
             this.startBossBattle();
+        } else if (tile === 9) { // Event NPC Tile
+            if ((this.currentFloor === 2 && !this.npcFlags.event3FDone) ||
+                (this.currentFloor === 3 && (!this.npcFlags.event4FDone || (this.npcFlags.friendGoblin && !this.npcFlags.rewardedGoblin))) ||
+                (this.currentFloor === 4 && !this.npcFlags.event5FDone) ||
+                (this.currentFloor === 5 && !this.npcFlags.event6FDone) ||
+                (this.currentFloor === 6 && !this.npcFlags.event7FDone) ||
+                (this.currentFloor === 7 && !this.npcFlags.event8FDone) ||
+                (this.currentFloor === 8 && !this.npcFlags.event9FDone)) {
+                this.addLog("誰かがいるようだ...");
+                if (this.currentFloor === 2) this.triggerEvent(3);
+                else if (this.currentFloor === 3) this.triggerEvent(4);
+                else if (this.currentFloor === 4) this.triggerEvent(5);
+                else if (this.currentFloor === 5) this.triggerEvent(6);
+                else if (this.currentFloor === 6) this.triggerEvent(7);
+                else if (this.currentFloor === 7) this.triggerEvent(8);
+                else if (this.currentFloor === 8) this.triggerEvent(9);
+            } else {
+                this.addLog("しかし、そこにはもう誰もいない...");
+            }
         } else if (tile === 4) { // Hidden Door
             this.addLog("隠し扉から奥へ進んだ...");
             floorData[this.playerPos.y][this.playerPos.x] = 0; // Remoe hidden door once stepped on
@@ -720,13 +771,434 @@ class Game {
                 this.startBattle(true); // pass true for hidden door enemy
             }
         } else {
+            // Normal floor tile
             this.checkEncounter();
         }
     }
 
+    triggerEvent(floor) {
+        this.state = 'EVENT';
+        document.getElementById('explore-menu').style.display = 'none';
+
+        const screen = document.getElementById('event-screen');
+        const title = document.getElementById('event-title');
+        const desc = document.getElementById('event-desc');
+        const img = document.getElementById('event-img');
+        const options = document.getElementById('event-options');
+
+        screen.style.display = 'flex';
+        options.innerHTML = '';
+
+        // Determine event image name
+        let imgName = `event_${floor}`;
+        if (floor === 9) {
+            imgName = this.npcFlags.helpedAdventurer ? 'event_9alive' : 'event_9dead';
+        } else if (floor === 7) {
+            imgName = this.npcFlags.metSwordsman ? 'event_7mad' : 'event_7dead';
+        } else if (floor === 4) {
+            // Re-visit case
+            if (this.npcFlags.friendGoblin && !this.npcFlags.rewardedGoblin) {
+                imgName = 'event_4reunion';
+            } else {
+                imgName = 'event_4child';
+            }
+        } else if (floor === 6) {
+            imgName = this.npcFlags.savedGoblin ? 'event_6parent_friend' : 'event_6parent_enemy';
+        }
+
+        // Load event image
+        img.src = `assets/${imgName}.png`;
+        img.style.display = 'block';
+        img.onerror = () => { img.style.display = 'none'; }; // Hide if image is missing
+
+        if (floor === 3) {
+            title.textContent = "自信に満ちた冒険者";
+            desc.innerHTML = "身なりの良い剣士がフレンドリーに話しかけてきた。<br><br>「君たち、そんな装備でここに来たのかい？ははは」<br><br>彼は気のいい男のようだ。<br>自分のおさがりの武器を分けてくれた。";
+
+            const btnThanks = document.createElement('button');
+            btnThanks.className = 'btn';
+            btnThanks.textContent = '受け取る';
+            btnThanks.onclick = () => {
+                this.addLog("自信に満ちた剣士から ロングソード をもらった！");
+                this.npcFlags.metSwordsman = true;
+                this.npcFlags.event3FDone = true;
+
+                const weapon = ITEMS.find(i => i.name === 'ロングソード');
+                if (weapon) this.inventory.push({ ...weapon });
+                else this.inventory.push({ name: 'ロングソード', type: 'weapon', level: 2, atk: 5, req: { str: 8 }, desc: '標準的な剣(ATK+5)' });
+
+                this.closeEvent();
+            };
+            options.appendChild(btnThanks);
+
+        } else if (floor === 4) {
+            if (this.npcFlags.friendGoblin && !this.npcFlags.rewardedGoblin) {
+                // Re-visit after helping parent
+                title.textContent = "ゴブリン親子の再会";
+                desc.innerHTML = "以前助けた小ゴブリンと、親ゴブリンが抱き合って喜んでいる。<br><br>親ゴブリンがこちらに気づき、深く頭を下げて<br>光り輝く小瓶を差し出してきた。";
+
+                const btnAccept = document.createElement('button');
+                btnAccept.className = 'btn';
+                btnAccept.textContent = '受け取る';
+                btnAccept.onclick = () => {
+                    this.addLog("ゴブリンの親子から 妖精の霊薬 をもらった！");
+                    this.npcFlags.rewardedGoblin = true;
+                    // Note: Ensure flag event4FDone remains true so standard interaction stops
+
+                    const elixir = {
+                        name: '妖精の霊薬', type: 'consumable', infinite: true, desc: '何度でも使える全体回復薬',
+                        effect: (p) => { this.party.forEach(mbr => mbr.hp = Math.min(mbr.maxHp, mbr.hp + 50)); this.addLog(`${p.name}は妖精の霊薬を使った！全員のHPが50回復！`); }
+                    };
+                    this.inventory.push(elixir);
+                    this.closeEvent();
+                };
+                options.appendChild(btnAccept);
+
+            } else {
+                title.textContent = "はぐれゴブリン";
+                desc.innerHTML = "親とはぐれた子供のゴブリンが壁の隅で震えている。<br><br>ひどく怯えており、こちらに襲いかかってくる様子はない。";
+
+                const btnFight = document.createElement('button');
+                btnFight.className = 'btn';
+                btnFight.textContent = '戦う';
+                btnFight.onclick = () => {
+                    this.addLog("魔物の幼生とはいえ、生かしておけばいずれ脅威となる。あなたは静かに武器を構えた。");
+                    this.npcFlags.event4FDone = true;
+                    this.closeEvent();
+
+                    this.state = 'BATTLE';
+                    this.currentBattle = {
+                        isBoss: false,
+                        monsters: [{
+                            id: 'monster-0',
+                            name: "スモールゴブリン",
+                            originalName: "スモールゴブリン",
+                            hp: 40, maxHp: 40, currentHp: 40, atk: 10, agi: 5, exp: 20, level: 4,
+                            svg: `<img src="assets/monster_1.png" style="width:100%; height:100%; object-fit:contain; transform:scale(0.8);" />`
+                        }],
+                        turnOrder: [],
+                        phase: 'INPUT',
+                        logs: ["スモールゴブリンが現れた！"],
+                        turnIndex: 0,
+                        cursor: 0
+                    };
+                    audio.playBGM('bgm_battle');
+                    this.updateUI();
+                };
+
+                const btnMercy = document.createElement('button');
+                btnMercy.className = 'btn';
+                btnMercy.style.color = '#888';
+                btnMercy.textContent = '見逃す';
+                btnMercy.onclick = () => {
+                    this.addLog("不要な戦闘は避けるべきだ。あなたは震えるゴブリンを横目に、足早に退避した。");
+                    this.npcFlags.savedGoblin = true;
+                    this.npcFlags.event4FDone = true;
+                    this.closeEvent();
+                };
+                options.appendChild(btnFight);
+                options.appendChild(btnMercy);
+            }
+
+        } else if (floor === 5) {
+            title.textContent = "負傷した冒険者";
+            desc.innerHTML = "薄気味悪い通路の隅に、<br>血を流して倒れている冒険者がいる。<br><br>息も絶え絶えにこちらを見上げ、<br>助けを求めているようだ...。<br><br>※助ける場合、パーティ全員のMPが0になり、<br>所持している消費アイテム（ポーション等）をすべて失います。";
+
+            const btnHelp = document.createElement('button');
+            btnHelp.className = 'btn';
+            btnHelp.textContent = '助ける';
+            btnHelp.onclick = () => {
+                this.addLog("あなたは手持ちの道具と魔力を駆使して冒険者を治療した！");
+                this.npcFlags.helpedAdventurer = true;
+                this.npcFlags.event5FDone = true;
+
+                // Set all MP to 0
+                this.party.forEach(p => p.mp = 0);
+
+                // Remove all consumable items from inventory
+                this.inventory = this.inventory.filter(item => item.type !== 'consumable');
+
+                this.addLog("パーティ全員のMPが0になり、全消費アイテムを失った...");
+                this.closeEvent();
+            };
+
+            const btnAbandon = document.createElement('button');
+            btnAbandon.className = 'btn';
+            btnAbandon.style.borderColor = '#888';
+            btnAbandon.style.color = '#888';
+            btnAbandon.textContent = '見捨てる';
+            btnAbandon.onclick = () => {
+                this.addLog("自分たちの生存すら保証されていない迷宮で、彼を背負う余裕はない。あなたは無言で立ち去った。");
+                this.npcFlags.event5FDone = true;
+                this.closeEvent();
+            };
+
+            options.appendChild(btnHelp);
+            options.appendChild(btnAbandon);
+
+        } else if (floor === 7) {
+            title.textContent = "７Fでの遭遇";
+            if (this.npcFlags.metSwordsman) {
+                desc.innerHTML = "３階で出会ったあの剣士なのか…？<br>彼は虚ろな目で宙を見つめ、全身を震わせている。<br><br>「アァ…オマエタチモ、俺ノ邪魔ヲスルノカ…ッ！」<br><br>突如、男が奇声を上げ、得物を振りかざして襲いかかってきた！";
+
+                const btnFight = document.createElement('button');
+                btnFight.className = 'btn';
+                btnFight.textContent = '戦う';
+                btnFight.onclick = () => {
+                    this.addLog("狂気に飲まれた剣士が襲いかかってきた！");
+                    this.npcFlags.event7FDone = true;
+                    this.closeEvent();
+
+                    // Trigger custom battle
+                    this.state = 'BATTLE';
+                    this.currentBattle = {
+                        isBoss: false,
+                        isSwordsmanEvent: true, // Custom flag to drop item on win
+                        monsters: [{
+                            id: 'monster-0',
+                            name: "狂乱の剣士",
+                            originalName: "狂乱の剣士",
+                            hp: 400, maxHp: 400, currentHp: 400, atk: 60, agi: 25, exp: 300, level: 7,
+                            svg: `<img src="assets/monster_5.png" style="width:100%; height:100%; object-fit:contain; filter:hue-rotate(320deg) contrast(1.5); transform:scale(1.3);" />` // Placeholder visually distinct
+                        }],
+                        turnOrder: [],
+                        phase: 'INPUT',
+                        logs: ["狂乱の剣士 現る！"],
+                        turnIndex: 0,
+                        cursor: 0
+                    };
+                    audio.playBGM('bgm_battle');
+                    this.updateUI();
+                };
+
+                const btnRun = document.createElement('button');
+                btnRun.className = 'btn';
+                btnRun.style.borderColor = '#888';
+                btnRun.style.color = '#888';
+                btnRun.textContent = '逃げる';
+                btnRun.onclick = () => {
+                    this.addLog("この異常な剣士と真正面から刃を交えるのは危険だ。あなたは強引に包囲を突破した。");
+                    this.npcFlags.event7FDone = true;
+
+                    // 80% HP reduction
+                    this.party.forEach(p => {
+                        if (p.hp > 0) {
+                            p.hp = Math.max(1, Math.floor(p.hp * 0.2));
+                        }
+                    });
+                    this.addLog("逃走の代償として、パーティ全員が深手を負った（HP残り20%）");
+                    this.closeEvent();
+                };
+
+                options.appendChild(btnFight);
+                options.appendChild(btnRun);
+
+            } else {
+                desc.innerHTML = "通路の先で、冒険者の無惨な死体を発見した。<br><br>彼の傍らには、禍々しい血の気を放つ<br>装備品が転がっている。";
+
+                const btnLoot = document.createElement('button');
+                btnLoot.className = 'btn';
+                btnLoot.style.color = '#888';
+                btnLoot.textContent = '奪い取る';
+                btnLoot.onclick = () => {
+                    this.addLog("これは彼にはもう必要のない物だ。あなたは遺体から装備品を回収した。");
+                    this.npcFlags.event7FDone = true;
+
+                    const weapon = { name: "呪われた 狂戦士の剣", type: "weapon", atk: 45, desc: "強力だが所有者の精神を蝕む" };
+                    this.inventory.push(weapon);
+                    this.closeEvent();
+                };
+                options.appendChild(btnLoot);
+            }
+
+        } else if (floor === 6) {
+            title.textContent = "親ゴブリン";
+            if (this.npcFlags.savedGoblin) {
+                desc.innerHTML = "巨大なキングゴブリンが立ちはだかった！<br>...しかし、敵意はないようだ。<br><br>どうやら、あなたが４階で自分の子供を見逃したことに<br>気づいているらしい。友好的に頭を下げている。";
+
+                const btnNod = document.createElement('button');
+                btnNod.className = 'btn';
+                btnNod.textContent = '頷く';
+                btnNod.onclick = () => {
+                    this.addLog("キングゴブリンは感謝を示すように低く唸った。");
+                    this.npcFlags.friendGoblin = true;
+                    this.npcFlags.event6FDone = true;
+                    this.closeEvent();
+                };
+                options.appendChild(btnNod);
+            } else {
+                desc.innerHTML = "巨大なキングゴブリンが立ちはだかった！<br><br>子供を殺された怒り狂っているのか、<br>こちらを睨みつけ、巨大な棍棒を振り上げている！";
+
+                const btnFight = document.createElement('button');
+                btnFight.className = 'btn';
+                btnFight.style.color = '#f55';
+                btnFight.style.borderColor = '#f55';
+                btnFight.textContent = '戦う';
+                btnFight.onclick = () => {
+                    this.addLog("怒れるキングゴブリンの咆哮が響く！");
+                    this.npcFlags.event6FDone = true;
+                    this.closeEvent();
+
+                    this.state = 'BATTLE';
+                    this.currentBattle = {
+                        isBoss: false,
+                        monsters: [{
+                            id: 'monster-0',
+                            name: "怒りのキングゴブリン",
+                            originalName: "怒りのキングゴブリン",
+                            hp: 350, maxHp: 350, currentHp: 350, atk: 55, agi: 15, exp: 250, level: 6,
+                            svg: `<img src="assets/monster_6.png" style="width:100%; height:100%; object-fit:contain; filter:sepia(1) hue-rotate(-50deg) saturate(3); transform:scale(1.5);" />`
+                        }],
+                        turnOrder: [],
+                        phase: 'INPUT',
+                        logs: ["怒りのキングゴブリンが現れた！"],
+                        turnIndex: 0,
+                        cursor: 0
+                    };
+                    audio.playBGM('bgm_battle');
+                    this.updateUI();
+                };
+                options.appendChild(btnFight);
+            }
+
+        } else if (floor === 8) {
+            title.textContent = "闇の賢者";
+            desc.innerHTML = "黒衣に身を包んだ、底知れぬ魔力を放つ老人が佇んでいる。<br><br>「ここまで辿り着くとはな。だが、お前たちの力では最深部の主には勝てまい。」<br>「どうだ。使えぬ者一人の『命の灯火』を吾輩に差し出さぬか？<br>それは、組織としての合理的な判断ではないかね……？」<br><br>※同意した場合、選択したメンバーが<strong>永久にロスト</strong>しますが、<br>引き換えに最強クラスの装備セットを入手します。";
+
+            const alive = this.party.filter(p => p.hp > 0);
+
+            if (alive.length <= 1) {
+                const btnSolo = document.createElement('button');
+                btnSolo.className = 'btn';
+                btnSolo.textContent = '話しかける';
+                btnSolo.onclick = () => {
+                    this.addLog("「ほう…まさか自分自身を捧げるつもりか？…狂っているな。帰るがよい」");
+                    this.closeEvent();
+                };
+                options.appendChild(btnSolo);
+            } else {
+                // Generate a sacrifice button for each alive member
+                alive.forEach(sacrifice => {
+                    const btnSacrifice = document.createElement('button');
+                    btnSacrifice.className = 'btn';
+                    btnSacrifice.style.color = '#f55';
+                    btnSacrifice.style.borderColor = '#f55';
+                    btnSacrifice.style.marginBottom = '5px';
+                    btnSacrifice.textContent = `${sacrifice.name}を犠牲にする`;
+
+                    btnSacrifice.onclick = () => {
+                        if (!confirm(`本当に ${sacrifice.name} を生贄に捧げますか？\n(二度と蘇生できなくなります)`)) return;
+
+                        // Unequip items first
+                        ['weapon', 'armor', 'accessory'].forEach(slot => {
+                            if (sacrifice.equipment[slot]) {
+                                this.inventory.push(sacrifice.equipment[slot]);
+                                sacrifice.equipment[slot] = null;
+                            }
+                        });
+
+                        // Perma-death logic
+                        sacrifice.hp = 0;
+                        sacrifice.baseVit = -999; // Ensures they cannot be revived normally
+                        this.addLog(`闇の賢者の魔術により、${sacrifice.name}の命が吸い尽くされた……！`);
+
+                        this.npcFlags.event8FDone = true;
+
+                        // Generate Dark Sage Reward Sets
+                        this.addLog("引き換えに「深淵の賢者セット」を手に入れた！");
+                        const weapon = { name: "深淵の杖", type: "weapon", atk: 15, req: { int: 25 }, desc: "INT+80 とてつもない魔力を秘めた杖", intBonus: 80 };
+                        const armor = { name: "黒き知恵のローブ", type: "armor", def: 30, req: { int: 20 }, desc: "INT+40 闇の魔力を編み込んだ法衣", intBonus: 40 };
+                        const acc = { name: "賢者の石の欠片", type: "accessory", atk: 5, def: 5, req: { int: 20 }, desc: "INT+30 膨大な知識を注ぎ込まれた魔石", intBonus: 30 };
+
+                        this.inventory.push(weapon, armor, acc);
+
+                        this.closeEvent();
+                    };
+                    options.appendChild(btnSacrifice);
+                });
+
+                const btnReject = document.createElement('button');
+                btnReject.className = 'btn';
+                btnReject.style.color = '#888';
+                btnReject.style.marginTop = '15px';
+                btnReject.textContent = '拒絶する';
+                btnReject.onclick = () => {
+                    this.addLog("「……そうか。ならば己の無力を呪いながら死ぬが良い」");
+                    this.addLog("老人は薄れ、闇に溶け込むように消滅した。");
+                    this.npcFlags.event8FDone = true;
+                    this.closeEvent();
+                };
+                options.appendChild(btnReject);
+            }
+
+        } else if (floor === 9) {
+            title.textContent = "９Fでの遭遇";
+            if (this.npcFlags.helpedAdventurer) {
+                desc.innerHTML = "見覚えのある冒険者が立っている！<br>彼は５階で助けたあの男だ。<br><br>「あの時は本当にありがとう。<br>おかげでここまで来られた。これはお礼だ、使ってくれ！」";
+
+                const btnThanks = document.createElement('button');
+                btnThanks.className = 'btn';
+                btnThanks.textContent = '受け取る';
+                btnThanks.onclick = () => {
+                    this.addLog("恩返しとして、伝説の装備セットを受け取った！");
+                    this.npcFlags.event9FDone = true;
+
+                    // Generate powerful generic items
+                    const weapon = { name: "勇者の剣", type: "weapon", atk: 50, desc: "恩知らずには扱えない伝説の剣" };
+                    const armor = { name: "英雄の鎧", type: "armor", def: 40, desc: "強固な守護をもたらす鎧" };
+                    const acc = { name: "光の指輪", type: "accessory", atk: 10, def: 10, desc: "全ステータスを底上げする指輪" };
+
+                    this.inventory.push(weapon, armor, acc);
+                    this.closeEvent();
+                };
+                options.appendChild(btnThanks);
+            } else {
+                desc.innerHTML = "通路の先で、冒険者の無惨な死体を発見した。<br>５階で見捨てたあの男のようだ...。<br><br>彼の傍らには、禍々しいオーラを放つ<br>装備品が転がっている。";
+
+                const btnLoot = document.createElement('button');
+                btnLoot.className = 'btn';
+                btnLoot.style.color = '#888';
+                btnLoot.textContent = '奪い取る';
+                btnLoot.onclick = () => {
+                    this.addLog("これは彼にはもう必要のない物だ。遺体から装備品を回収した。");
+                    this.npcFlags.event9FDone = true;
+
+                    const weapon = { name: "呪われた 血塗られた刃", type: "weapon", atk: 60, desc: "強力だが所有者の精神を蝕む" };
+                    const armor = { name: "呪われた 怨念の皮鎧", type: "armor", def: 50, desc: "無念を吸い込んだ不吉な防具" };
+                    const acc = { name: "呪われた 破滅の首飾り", type: "accessory", atk: 20, def: -20, desc: "大きな力と引き換えに防御を捨てる" };
+
+                    this.inventory.push(weapon, armor, acc);
+                    this.closeEvent();
+                };
+                options.appendChild(btnLoot);
+            }
+        }
+    }
+
+    closeEvent() {
+        document.getElementById('event-screen').style.display = 'none';
+        document.getElementById('explore-menu').style.display = 'flex';
+        this.state = 'EXPLORE';
+        this.updateUI();
+    }
+
     updateVisited() {
-        if (this.visited[this.currentFloor] && this.visited[this.currentFloor][this.playerPos.y]) {
-            this.visited[this.currentFloor][this.playerPos.y][this.playerPos.x] = true;
+        const floorArray = this.visited[this.currentFloor];
+        if (!floorArray) return;
+
+        const maxLevel = LEVELS[this.currentFloor].length;
+        const cx = this.playerPos.x;
+        const cy = this.playerPos.y;
+
+        // Reveal 3x3 surrounding tiles
+        for (let y = -1; y <= 1; y++) {
+            for (let x = -1; x <= 1; x++) {
+                const ny = cy + y;
+                const nx = cx + x;
+                if (ny >= 0 && ny < maxLevel && nx >= 0 && nx < LEVELS[this.currentFloor][ny].length) {
+                    floorArray[ny][nx] = true;
+                }
+            }
         }
     }
 
@@ -1087,6 +1559,13 @@ class Game {
                 this.triggerEnding();
                 return;
             }
+
+            if (this.currentBattle.isSwordsmanEvent) {
+                this.addLog("狂乱の剣士を退けた...！強力な名刀を手に入れた。");
+                const specialWpn = { name: "名刀・狂瀾", type: "weapon", atk: 65, req: { str: 20 }, desc: "生気を吸う妖刀(ATK+65)" };
+                this.inventory.push(specialWpn);
+            }
+
             const exp = this.currentBattle.monsters.reduce((sum, m) => sum + m.exp, 0);
             this.party.forEach(p => {
                 if (p.hp > 0) {
@@ -1421,9 +1900,19 @@ class Game {
             return;
         }
         if (item.type === 'consumable') {
-            target.hp = Math.min(target.maxHp, target.hp + item.hpRestore);
-            this.addLog(`${target.name}は${item.name}を使った。HPが回復した！`);
-            this.inventory.splice(itemIdx, 1);
+            if (item.hpRestore) {
+                target.hp = Math.min(target.maxHp, target.hp + item.hpRestore);
+                this.addLog(`${target.name}は${item.name}を使った。HPが回復した！`);
+            } else if (item.mpRestore) {
+                target.mp = Math.min(target.maxMp, target.mp + item.mpRestore);
+                this.addLog(`${target.name}は${item.name}を使った。MPが回復した！`);
+            } else if (item.recover) {
+                target.hp = Math.min(target.maxHp, target.hp + item.recover);
+                this.addLog(`${target.name}は${item.name}を使用！ ${target.name}のHPが${item.recover}回復した！`);
+            }
+            if (!item.infinite) {
+                this.inventory.splice(this.inventory.indexOf(item), 1);
+            }
             this.updateCampUI();
             this.updateUI();
         }
@@ -1671,6 +2160,9 @@ class Game {
                 if (isHiddenDoor) {
                     ctx.globalAlpha = 1.0; // Reset
                 }
+                if (map[oy][ox] === 9) {
+                    // Optionally draw something in 3D for the NPC Event if we want to
+                }
             } else {
                 const tile = (oy >= 0 && oy < map.length && ox >= 0 && ox < map[oy].length) ? map[oy][ox] : 0;
                 // 距離に応じた暗度（壁と同じ計算）
@@ -1729,6 +2221,8 @@ class Game {
                     ctx.fillStyle = '#112211';
                 } else if (mc === 8) { // Boss Tile
                     ctx.fillStyle = '#ff0000';
+                } else if (mc === 9) { // Event NPC Tile
+                    ctx.fillStyle = '#ffff00'; // Yellow
                 } else {
                     // Empty floors, spinners, teleporters all look like safe floor on map
                     ctx.fillStyle = '#113311';
