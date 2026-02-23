@@ -313,6 +313,25 @@ class AudioManager {
             this.bgmAudio = null;
         }
     }
+
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        const btn = document.getElementById('btn-mute');
+        if (btn) {
+            btn.textContent = this.isMuted ? '🔇' : '🔊';
+        }
+
+        if (this.isMuted) {
+            if (this.bgmAudio) {
+                this.bgmAudio.pause();
+            }
+        } else {
+            // Resume BGM if it was playing and we unmuted
+            if (this.bgmAudio) {
+                this.bgmAudio.play().catch(e => { });
+            }
+        }
+    }
 }
 const audio = new AudioManager();
 
@@ -864,7 +883,7 @@ class Game {
                 btnFight.onclick = () => {
                     this.addLog("魔物の幼生とはいえ、生かしておけばいずれ脅威となる。あなたは静かに武器を構えた。");
                     this.npcFlags.event4FDone = true;
-                    this.closeEvent();
+                    document.getElementById('event-screen').style.display = 'none';
 
                     this.state = 'BATTLE';
                     this.currentBattle = {
@@ -874,15 +893,22 @@ class Game {
                             name: "スモールゴブリン",
                             originalName: "スモールゴブリン",
                             hp: 40, maxHp: 40, currentHp: 40, atk: 10, agi: 5, exp: 20, level: 4,
-                            svg: `<img src="assets/monster_1.png" style="width:100%; height:100%; object-fit:contain; transform:scale(0.8);" />`
+                            svg: `<img src="assets/event_4child.png" style="width:100%; height:100%; object-fit:contain; transform:scale(0.8);" />`
                         }],
                         turnOrder: [],
                         phase: 'INPUT',
-                        logs: ["スモールゴブリンが現れた！"],
-                        turnIndex: 0,
-                        cursor: 0
+                        logs: ["スモールゴブリンが現れた！"]
                     };
+
+                    document.getElementById('explore-menu').style.display = 'none';
+                    document.getElementById('battle-menu').style.display = 'flex';
+                    const mo = document.getElementById('monster-overlay');
+                    mo.innerHTML = `<div class="monster-img-container" id="monster-img-0">${this.currentBattle.monsters[0].svg}</div>`;
+                    mo.style.display = 'flex';
+                    mo.style.justifyContent = 'center';
+
                     audio.playBGM('bgm_battle');
+                    this.turnIndex = 0;
                     this.updateUI();
                 };
 
@@ -947,7 +973,7 @@ class Game {
                 btnFight.onclick = () => {
                     this.addLog("狂気に飲まれた剣士が襲いかかってきた！");
                     this.npcFlags.event7FDone = true;
-                    this.closeEvent();
+                    document.getElementById('event-screen').style.display = 'none';
 
                     // Trigger custom battle
                     this.state = 'BATTLE';
@@ -959,15 +985,22 @@ class Game {
                             name: "狂乱の剣士",
                             originalName: "狂乱の剣士",
                             hp: 400, maxHp: 400, currentHp: 400, atk: 60, agi: 25, exp: 300, level: 7,
-                            svg: `<img src="assets/monster_5.png" style="width:100%; height:100%; object-fit:contain; filter:hue-rotate(320deg) contrast(1.5); transform:scale(1.3);" />` // Placeholder visually distinct
+                            svg: `<img src="assets/event_7mad.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.2);" />`
                         }],
                         turnOrder: [],
                         phase: 'INPUT',
-                        logs: ["狂乱の剣士 現る！"],
-                        turnIndex: 0,
-                        cursor: 0
+                        logs: ["狂乱の剣士 現る！"]
                     };
+
+                    document.getElementById('explore-menu').style.display = 'none';
+                    document.getElementById('battle-menu').style.display = 'flex';
+                    const mo = document.getElementById('monster-overlay');
+                    mo.innerHTML = `<div class="monster-img-container" id="monster-img-0">${this.currentBattle.monsters[0].svg}</div>`;
+                    mo.style.display = 'flex';
+                    mo.style.justifyContent = 'center';
+
                     audio.playBGM('bgm_battle');
+                    this.turnIndex = 0;
                     this.updateUI();
                 };
 
@@ -1037,7 +1070,7 @@ class Game {
                 btnFight.onclick = () => {
                     this.addLog("怒れるキングゴブリンの咆哮が響く！");
                     this.npcFlags.event6FDone = true;
-                    this.closeEvent();
+                    document.getElementById('event-screen').style.display = 'none';
 
                     this.state = 'BATTLE';
                     this.currentBattle = {
@@ -1047,15 +1080,22 @@ class Game {
                             name: "怒りのキングゴブリン",
                             originalName: "怒りのキングゴブリン",
                             hp: 350, maxHp: 350, currentHp: 350, atk: 55, agi: 15, exp: 250, level: 6,
-                            svg: `<img src="assets/monster_6.png" style="width:100%; height:100%; object-fit:contain; filter:sepia(1) hue-rotate(-50deg) saturate(3); transform:scale(1.5);" />`
+                            svg: `<img src="assets/event_6parent_enemy.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.5);" />`
                         }],
                         turnOrder: [],
                         phase: 'INPUT',
-                        logs: ["怒りのキングゴブリンが現れた！"],
-                        turnIndex: 0,
-                        cursor: 0
+                        logs: ["怒りのキングゴブリンが現れた！"]
                     };
+
+                    document.getElementById('explore-menu').style.display = 'none';
+                    document.getElementById('battle-menu').style.display = 'flex';
+                    const mo = document.getElementById('monster-overlay');
+                    mo.innerHTML = `<div class="monster-img-container" id="monster-img-0">${this.currentBattle.monsters[0].svg}</div>`;
+                    mo.style.display = 'flex';
+                    mo.style.justifyContent = 'center';
+
                     audio.playBGM('bgm_battle');
+                    this.turnIndex = 0;
                     this.updateUI();
                 };
                 options.appendChild(btnFight);
@@ -1398,6 +1438,8 @@ class Game {
                             const heal = Math.max(15, action.actor.int + 10);
                             target.hp = Math.min(target.maxHp, target.hp + heal);
                             this.addLog(`${action.actor.name}のヒール！(MP-4) ${target.name}のHPが${heal}回復！`);
+                            const tgtIdx = this.party.indexOf(target);
+                            if (tgtIdx !== -1) this.showHealEffect(tgtIdx, heal);
                         } else {
                             this.addLog(`${action.actor.name}はMPが足りない！`);
                         }
@@ -1409,6 +1451,7 @@ class Game {
                             aliveMonsters.forEach(m => {
                                 const dmg = Math.max(10, Math.floor(action.actor.int * 1.5 + 5));
                                 m.currentHp -= dmg;
+                                this.addLog(`${m.name}に${dmg}のダメージ！`);
                                 this.showHitEffect(m.id, dmg);
                             });
                         } else {
@@ -1445,6 +1488,13 @@ class Game {
                         return;
                     } else this.addLog("逃げられなかった！");
                 }
+
+                monsters.forEach(m => {
+                    if (m.currentHp <= 0 && !m.deadLogged) {
+                        m.deadLogged = true;
+                        this.addLog(`${m.name}を倒した！`);
+                    }
+                });
             } else {
                 if (action.actor.currentHp <= 0) continue; // Skip attacks if monster died before turn
                 const aliveParty = this.party.filter(p => p.hp > 0);
@@ -1460,6 +1510,13 @@ class Game {
                     this.showPartyHitEffect(pIdx, dmg);
                     audio.playSE('se_damage');
                 }
+
+                this.party.forEach(p => {
+                    if (p.hp <= 0 && !p.deadLogged) {
+                        p.deadLogged = true;
+                        this.addLog(`${p.name}は倒れた...`);
+                    }
+                });
             }
             this.updateUI();
 
@@ -1511,26 +1568,52 @@ class Game {
 
     showHitEffect(monsterId, dmgNum) {
         audio.playSE('se_attack');
-        const mNode = document.getElementById(monsterId);
+        // monsterId is 'monster-0', but DOM id is 'monster-img-0'
+        const domId = monsterId.replace('monster-', 'monster-img-');
+        const mNode = document.getElementById(domId);
         if (!mNode) return;
         mNode.classList.remove('target-hit');
         void mNode.offsetWidth; // trigger reflow
         mNode.classList.add('target-hit');
 
+        const rect = mNode.getBoundingClientRect();
+
         const popup = document.createElement('div');
         popup.className = 'damage-popup';
         popup.textContent = dmgNum;
-        mNode.appendChild(popup);
+        // Calculate center position relative to document viewport
+        popup.style.left = `${rect.left + (rect.width || 100) / 2 + window.scrollX}px`;
+        popup.style.top = `${rect.top + (rect.height || 100) / 2 - 20 + window.scrollY}px`;
+
+        document.body.appendChild(popup);
         setTimeout(() => { if (popup.parentNode) popup.remove(); }, 1000);
 
-        // Hide monster quickly if HP dropped to 0
-        const mData = this.currentBattle.monsters.find(m => m.id === monsterId.replace('monster-img-', 'monster-'));
+        // Hide monster smoothly if HP dropped to 0
+        const mData = this.currentBattle.monsters.find(m => m.id === monsterId);
         if (mData && mData.currentHp <= 0) {
+            mNode.style.transition = 'all 0.5s ease-out';
+            mNode.style.opacity = '0';
+            mNode.style.transform = 'scale(0.1)';
             setTimeout(() => {
-                mNode.style.opacity = '0';
-                mNode.style.transition = 'opacity 0.5s';
-            }, 400);
+                mNode.style.display = 'none';
+            }, 500);
         }
+    }
+
+    showHealEffect(partyIdx, healNum) {
+        const pNode = document.getElementById(`party-member-${partyIdx}`);
+        if (!pNode) return;
+
+        const rect = pNode.getBoundingClientRect();
+
+        const popup = document.createElement('div');
+        popup.className = 'heal-popup';
+        popup.textContent = healNum;
+        popup.style.left = `${rect.left + rect.width / 2 + window.scrollX}px`;
+        popup.style.top = `${rect.top + rect.height / 2 - 20 + window.scrollY}px`;
+
+        document.body.appendChild(popup);
+        setTimeout(() => { if (popup.parentNode) popup.remove(); }, 1000);
     }
 
     showPartyHitEffect(partyIdx, dmgNum) {
@@ -1540,10 +1623,15 @@ class Game {
         void pNode.offsetWidth; // trigger reflow
         pNode.classList.add('target-hit');
 
+        const rect = pNode.getBoundingClientRect();
+
         const popup = document.createElement('div');
         popup.className = 'damage-popup';
         popup.textContent = dmgNum;
-        pNode.appendChild(popup);
+        popup.style.left = `${rect.left + rect.width / 2 + window.scrollX}px`;
+        popup.style.top = `${rect.top + rect.height / 2 - 20 + window.scrollY}px`;
+
+        document.body.appendChild(popup);
         setTimeout(() => { if (popup.parentNode) popup.remove(); }, 1000);
     }
 
@@ -2252,12 +2340,15 @@ class Game {
         list.innerHTML = '';
         this.party.forEach((p, i) => {
             const div = document.createElement('div');
+            // ID assigned so we can target them for damage/heal floaters
+            div.id = `party-member-${i}`;
             div.className = `party-member ${this.state === 'BATTLE' && this.turnIndex === i ? 'active' : ''}`;
             const hpW = (p.hp / p.maxHp) * 100;
             const mpW = p.maxMp > 0 ? (p.mp / p.maxMp) * 100 : 0;
             div.innerHTML = `
                 <div style="display:flex; justify-content:space-between"><strong>${p.name}</strong> <span>Lv${p.level} ${p.job}</span></div>
-                <div class="stat-bar"><div class="stat-fill" style="width:${hpW}%"></div></div>
+                <div class="stat-bar"><div class="stat-fill" style="width:${hpW}%; background:#ff4444;"></div></div>
+                <div class="stat-bar"><div class="stat-fill" style="width:${mpW}%; background:#4444ff;"></div></div>
                 <div style="font-size:10px">HP ${p.hp}/${p.maxHp}  MP ${p.mp}/${p.maxMp}</div>
             `;
             list.appendChild(div);
