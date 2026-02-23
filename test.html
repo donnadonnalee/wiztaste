@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Legacy of the Abyss: Echoes of the Lost King</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-color: #00ff41;
+            --accent-color: #ff00ff;
+            --border-color: #444;
+            --font-main: 'Courier New', Courier, monospace;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+        }
+
+        #app-root {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 130px);
+            /* 広告用に下部130pxを安全地帯として常時空ける */
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-main);
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            box-sizing: border-box;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        #game-wrapper {
+            flex: 1;
+            /* 広告タグ以外の余った縦スペースをすべて 차지する */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            /* Safe centering (part 1) */
+            width: 100%;
+            min-height: 0;
+            /* flex-itemが縮むために必須 */
+            padding: 5px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            /* 万が一画面が小さすぎる場合は内部でスクロール */
+        }
+
+        #game-container {
+            margin: auto;
+            /* Safe centering (part 2) */
+            width: 100%;
+            max-width: 900px;
+            height: 100%;
+            max-height: 600px;
+            /* PCでの最大高さ */
+            display: grid;
+            grid-template-areas:
+                "view status"
+                "log status"
+                "controls status";
+            grid-template-columns: 1fr 300px;
+            grid-template-rows: minmax(150px, 1fr) minmax(80px, 150px) min-content;
+            gap: 10px;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            position: relative;
+            z-index: 10000;
+            background-color: var(--bg-color);
+            box-sizing: border-box;
+        }
+
+        /* Viewport */
+        #viewport-container {
+            grid-area: view;
+            position: relative;
+            background: #000;
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        canvas#view-canvas {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+
+        #monster-overlay {
+            position: absolute;
+            bottom: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            transform-origin: bottom center;
+            width: 240px;
+            height: 240px;
+            pointer-events: none;
+            display: none;
+            image-rendering: pixelated;
+        }
+
+        #floor-indicator {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border: 1px solid var(--text-color);
+            font-size: 14px;
+        }
+
+        /* Status Area */
+        #status-area {
+            grid-area: status;
+            border: 2px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(10, 10, 10, 0.9);
+        }
+
+        .party-member {
+            border: 1px solid var(--border-color);
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .party-member.active {
+            border-color: var(--text-color);
+            background: rgba(0, 255, 65, 0.1);
+        }
+
+        .stat-bar {
+            width: 100%;
+            height: 5px;
+            background: #222;
+            margin-top: 3px;
+        }
+
+        .stat-fill {
+            height: 100%;
+            background: var(--text-color);
+            transition: width 0.3s;
+        }
+
+        #minimap-container {
+            margin-top: auto;
+            text-align: center;
+        }
+
+        #minimap-canvas {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #000;
+            border: 1px solid var(--text-color);
+        }
+
+        /* Log Window */
+        #log-window {
+            grid-area: log;
+            border: 2px solid var(--border-color);
+            padding: 10px;
+            font-size: 14px;
+            overflow-y: auto;
+            background: #000;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        /* Controls */
+        #controls {
+            grid-area: controls;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border: 2px solid var(--border-color);
+        }
+
+        .btn {
+            background: #111;
+            border: 1px solid var(--text-color);
+            color: var(--text-color);
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            background: var(--text-color);
+            color: #000;
+        }
+
+        .btn:disabled {
+            border-color: #444;
+            color: #444;
+            cursor: not-allowed;
+        }
+
+        #battle-menu {
+            display: none;
+            gap: 5px;
+        }
+
+        /* Flash Effects */
+        .flash {
+            animation: flash-anim 0.2s;
+        }
+
+        @keyframes flash-anim {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        #camp-menu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--text-color);
+            display: none;
+            flex-direction: column;
+            padding: 10px;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .camp-header {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px dotted var(--text-color);
+            padding-bottom: 5px;
+        }
+
+        .camp-character {
+            display: flex;
+            justify-content: space-between;
+            border: 1px dashed #444;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .camp-char-stats {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .camp-char-actions {
+            width: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        @media (max-width: 900px) {
+            #game-container {
+                max-width: 100%;
+                max-height: none;
+                /* スマホではwrapperいっぱいに広げる */
+                grid-template-areas: "view" "status" "log" "controls";
+                grid-template-columns: 1fr;
+                /* スマホでは行の高さを相対的にし、画面内に収まるように縮める */
+                grid-template-rows: minmax(150px, 30vh) minmax(100px, 140px) minmax(80px, 1fr) 60px;
+            }
+
+            #minimap-container {
+                display: none;
+            }
+        }
+
+        /* Screens */
+        .overlay-screen {
+            position: absolute;
+            /* fixedから変更し#app-rootに追従させる */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 20000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: var(--text-color);
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        #timer-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border: 1px solid var(--text-color);
+            font-size: 14px;
+            font-family: inherit;
+            color: #ffcc00;
+            z-index: 5;
+        }
+
+        .ranking-list {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--text-color);
+            padding: 10px;
+            background: #111;
+        }
+
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dotted #444;
+            padding: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app-root">
+        <div id="game-wrapper">
+            <div id="game-container">
+                <div id="viewport-container">
+                    <canvas id="view-canvas"></canvas>
+                    <div id="floor-indicator">B1F</div>
+                    <div id="timer-display">00:00:00</div>
+                    <div id="monster-overlay"></div>
+                    <div id="camp-menu"></div>
+                </div>
+
+                <div id="status-area">
+                    <div id="party-list"></div>
+                    <div id="minimap-container">
+                        <div style="font-size: 10px; margin-bottom: 2px;">AUTO MAP</div>
+                        <canvas id="minimap-canvas" width="160" height="160"></canvas>
+                    </div>
+                </div>
+
+                <div id="log-window"></div>
+
+                <div id="controls">
+                    <div id="explore-menu">
+                        <button class="btn">左回転</button>
+                        <button class="btn">前進</button>
+                        <button class="btn">右回転</button>
+                        <button class="btn">後退</button>
+                        <button class="btn" style="color:#ffcc00; border-color:#ffcc00">CAMP</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div
+        style="text-align: center; height:130px; background:white; color:black; position:fixed; bottom:0; left:0; width:100%; z-index:9999;">
+        <h2>SHINOBI ADS DIV</h2>
+    </div>
+</body>
+
+</html>

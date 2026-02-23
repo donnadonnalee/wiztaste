@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Legacy of the Abyss: Echoes of the Lost King</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div id="app-root">
+        <div id="game-wrapper">
+            <div id="game-container">
+                <div id="viewport-container">
+                    <canvas id="view-canvas"></canvas>
+                    <div id="floor-indicator">B1F</div>
+                    <div id="timer-display">00:00:00</div>
+                    <div id="monster-overlay"></div>
+                    <div id="camp-menu"></div>
+                </div>
+
+                <div id="status-area">
+                    <div id="party-list"></div>
+                    <div id="minimap-container">
+                        <div style="font-size: 10px; margin-bottom: 2px;">AUTO MAP</div>
+                        <canvas id="minimap-canvas" width="160" height="160"></canvas>
+                    </div>
+                </div>
+
+                <div id="log-window"></div>
+
+                <div id="controls">
+                    <div id="explore-menu">
+                        <button class="btn" onclick="game.move('left')">左回転</button>
+                        <button class="btn" onclick="game.move('forward')">前進</button>
+                        <button class="btn" onclick="game.move('right')">右回転</button>
+                        <button class="btn" onclick="game.move('backward')">後退</button>
+                        <button class="btn" onclick="game.toggleCamp()"
+                            style="color:#ffcc00; border-color:#ffcc00">CAMP</button>
+                    </div>
+                    <div id="battle-menu">
+                        <button class="btn battle-btn" onclick="game.battleAction('attack')">攻撃 (A)</button>
+                        <button class="btn battle-btn" onclick="game.battleAction('magic')">魔法 (S)</button>
+                        <button class="btn battle-btn" onclick="game.battleAction('guard')">防御 (D)</button>
+                        <button class="btn battle-btn" onclick="game.battleAction('run')">逃走 (F)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- START SCREEN -->
+            <div id="char-create-screen" class="overlay-screen">
+                <h1 style="color:#ffcc00; margin-bottom: 5px;">深淵の迷宮</h1>
+                <p style="font-size: 12px; margin-bottom: 20px;">目的: B10Fに潜む「アビスロード」を討伐せよ！</p>
+                <div id="char-create-list"
+                    style="display:flex; flex-direction:column; gap:10px; width:100%; max-width:500px; margin-bottom:20px;">
+                    <!-- Characters dynamically added here -->
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn" id="btn-reroll" style="border-color:#55f;">パーティ再抽選</button>
+                    <button class="btn" id="btn-start" style="border-color:#f55; color:#f55;">冒険開始 (タイマー始動)</button>
+                </div>
+            </div>
+
+            <!-- ENDING SCREEN -->
+            <div id="ending-screen" class="overlay-screen" style="display: none;">
+                <h1 style="color:#ffcc00;">GAME CLEAR!</h1>
+                <p>アビスロードを討伐した！</p>
+                <p>クリアタイム: <span id="clear-time-display" style="color:#5f5; font-size:20px;">00:00:00</span></p>
+
+                <div style="margin-top: 20px; text-align:center;">
+                    <input type="text" id="player-name-input" placeholder="あなたの名前" maxlength="15"
+                        style="background:#000; color:#fff; border:1px solid #fff; padding:5px; margin-bottom:10px;"><br>
+                    <button class="btn" id="btn-submit-score">ランキングに登録</button>
+                </div>
+
+                <div class="ranking-list">
+                    <h3 style="text-align:center; border-bottom:1px solid #fff; padding-bottom:5px; margin-bottom:5px;">
+                        TOP
+                        RANKERS</h3>
+                    <div id="ranking-container">Loading...</div>
+                </div>
+                <button class="btn" style="margin-top: 20px;" onclick="location.reload()">タイトルへ戻る</button>
+            </div>
+
+        </div> <!-- /app-root -->
+
+        <!-- FIREBASE INIT -->
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+            import { getDatabase, ref, push, query, orderByChild, limitToFirst, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyBh4OV27Vb17fhgL3nyvmqUpQ2Uj0-7fB8",
+                authDomain: "wiztaste-ranking.firebaseapp.com",
+                databaseURL: "https://wiztaste-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
+                projectId: "wiztaste-ranking",
+                storageBucket: "wiztaste-ranking.firebasestorage.app",
+                messagingSenderId: "314347962897",
+                appId: "1:314347962897:web:cef1548be5b069e98267b0",
+                measurementId: "G-BMLMNTL0CL"
+            };
+
+            const app = initializeApp(firebaseConfig);
+            const database = getDatabase(app);
+
+            // Expose Firebase DB functions to global scope for Game class
+            window.firebaseDB = database;
+            window.firebaseRef = ref;
+            window.firebasePush = push;
+            window.firebaseQuery = query;
+            window.firebaseOrderByChild = orderByChild;
+            window.firebaseLimitToFirst = limitToFirst;
+            window.firebaseOnValue = onValue;
+            window.firebaseInitialized = true;
+        </script>
+
+        <script src="main.js"></script>
+</body>
+
+</html>
