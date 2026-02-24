@@ -359,6 +359,7 @@ class Game {
         this.state = 'START';
         this.startTime = null;
         this.clearTime = null;
+        this.karma = 0;
 
         this.currentBattle = null;
         this.turnIndex = 0;
@@ -837,14 +838,15 @@ class Game {
         img.onerror = () => { img.style.display = 'none'; }; // Hide if image is missing
 
         if (floor === 3) {
-            title.textContent = "自信に満ちた冒険者";
-            desc.innerHTML = "身なりの良い剣士がフレンドリーに話しかけてきた。<br><br>「君たち、そんな装備でここに来たのかい？ははは」<br><br>彼は気のいい男のようだ。<br>自分のおさがりの武器を分けてくれた。";
+            title.textContent = "気前のよい剣士『アルトリウス』";
+            desc.innerHTML = "陽気な笑みを浮かべた見目麗しい剣士が、馴れ馴れしく話しかけてきた。<br><br>「やあ君たち、そんな装備でここに来たのかい？ははは、無茶をする！」<br><br>彼は気のいい男のようだ。自分のおさがりの武器を差し出してきた。<br>「ここでの掟は持ちつ持たれつさ。俺のおさがりだけど、持っていくといい。いつか恩返ししてくれよ？」";
 
             const btnThanks = document.createElement('button');
             btnThanks.className = 'btn';
             btnThanks.textContent = '受け取る';
             btnThanks.onclick = () => {
-                this.addLog("自信に満ちた剣士から ロングソード をもらった！");
+                this.karma += 10;
+                this.addLog("気前のよい剣士アルトリウスから ロングソード をもらった！");
                 this.npcFlags.metSwordsman = true;
                 this.npcFlags.event3FDone = true;
 
@@ -860,24 +862,65 @@ class Game {
             if (this.npcFlags.friendGoblin && !this.npcFlags.rewardedGoblin) {
                 // Re-visit after helping parent
                 title.textContent = "ゴブリン親子の再会";
-                desc.innerHTML = "以前助けた小ゴブリンと、親ゴブリンが抱き合って喜んでいる。<br><br>親ゴブリンがこちらに気づき、深く頭を下げて<br>光り輝く小瓶を差し出してきた。";
+                desc.innerHTML = "以前見逃した小ゴブリンと、親ゴブリンが抱き合って喜んでいる。<br><br>親ゴブリンがこちらに気づき、深く頭を下げて<br>光り輝く小瓶を差し出してきた。";
 
                 const btnAccept = document.createElement('button');
                 btnAccept.className = 'btn';
                 btnAccept.textContent = '受け取る';
                 btnAccept.onclick = () => {
+                    this.karma += 30;
                     this.addLog("ゴブリンの親子から 妖精の霊薬 をもらった！");
                     this.npcFlags.rewardedGoblin = true;
                     // Note: Ensure flag event4FDone remains true so standard interaction stops
 
                     const elixir = {
                         name: '妖精の霊薬', type: 'consumable', infinite: true, targetAll: true, desc: '何度でも使える全体回復薬',
-                        effect: () => { this.party.forEach(mbr => mbr.hp = Math.min(mbr.maxHp, mbr.hp + 50)); this.addLog(`妖精の霊薬を使った！全員のHPが50回復！`); }
+                        effect: () => { this.party.forEach(mbr => { if (mbr.hp > 0) mbr.hp = Math.min(mbr.maxHp, mbr.hp + 50); }); this.addLog(`妖精の霊薬を使った！全員のHPが50回復！`); }
                     };
                     this.inventory.push(elixir);
                     this.closeEvent();
                 };
                 options.appendChild(btnAccept);
+
+                const btnFight = document.createElement('button');
+                btnFight.className = 'btn';
+                btnFight.style.color = '#f55';
+                btnFight.style.borderColor = '#f55';
+                btnFight.textContent = '戦う';
+                btnFight.onclick = () => {
+                    this.karma -= 100;
+                    this.addLog("魔物から施しを受ける義理はない。あなたは全ての持ち物を奪い取るべく剣を抜いた。");
+                    this.npcFlags.rewardedGoblin = true;
+                    document.getElementById('event-screen').style.display = 'none';
+
+                    this.state = 'BATTLE';
+                    this.currentBattle = {
+                        isBoss: false,
+                        isGoblinEvent: true, // Custom flag
+                        monsters: [{
+                            id: 'monster-0',
+                            name: "キングゴブリン",
+                            originalName: "キングゴブリン",
+                            hp: 900, maxHp: 900, currentHp: 900, atk: 95, agi: 25, exp: 600, level: 6,
+                            svg: `<img src="assets/event_6parent_enemy.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.5);" />`
+                        }],
+                        turnOrder: [],
+                        phase: 'INPUT',
+                        logs: ["防衛のためキングゴブリンが立ちはだかった！"]
+                    };
+
+                    document.getElementById('explore-menu').style.display = 'none';
+                    document.getElementById('battle-menu').style.display = 'flex';
+                    const mo = document.getElementById('monster-overlay');
+                    mo.innerHTML = `<div class="monster-img-container" id="monster-img-0">${this.currentBattle.monsters[0].svg}</div>`;
+                    mo.style.display = 'flex';
+                    mo.style.justifyContent = 'center';
+
+                    audio.playBGM('bgm_battle');
+                    this.turnIndex = 0;
+                    this.updateUI();
+                };
+                options.appendChild(btnFight);
 
             } else {
                 title.textContent = "はぐれゴブリン";
@@ -887,6 +930,7 @@ class Game {
                 btnFight.className = 'btn';
                 btnFight.textContent = '戦う';
                 btnFight.onclick = () => {
+                    this.karma -= 50;
                     this.addLog("魔物の幼生とはいえ、生かしておけばいずれ脅威となる。あなたは静かに武器を構えた。");
                     this.npcFlags.event4FDone = true;
                     document.getElementById('event-screen').style.display = 'none';
@@ -923,6 +967,7 @@ class Game {
                 btnMercy.style.color = '#888';
                 btnMercy.textContent = '見逃す';
                 btnMercy.onclick = () => {
+                    this.karma += 20;
                     this.addLog("不要な戦闘は避けるべきだ。あなたは震えるゴブリンを横目に、足早に退避した。");
                     this.npcFlags.savedGoblin = true;
                     this.npcFlags.event4FDone = true;
@@ -940,6 +985,7 @@ class Game {
             btnHelp.className = 'btn';
             btnHelp.textContent = '助ける';
             btnHelp.onclick = () => {
+                this.karma += 50;
                 this.addLog("あなたは手持ちの道具と魔力を駆使して冒険者を治療した！");
                 this.npcFlags.helpedAdventurer = true;
                 this.npcFlags.event5FDone = true;
@@ -960,6 +1006,7 @@ class Game {
             btnAbandon.style.color = '#888';
             btnAbandon.textContent = '見捨てる';
             btnAbandon.onclick = () => {
+                this.karma -= 20;
                 this.addLog("自分たちの生存すら保証されていない迷宮で、彼を背負う余裕はない。あなたは無言で立ち去った。");
                 this.npcFlags.event5FDone = true;
                 this.closeEvent();
@@ -969,14 +1016,15 @@ class Game {
             options.appendChild(btnAbandon);
 
         } else if (floor === 7) {
-            title.textContent = "７Fでの遭遇";
+            title.textContent = "狂乱の剣士『アルトリウス』";
             if (this.npcFlags.metSwordsman) {
-                desc.innerHTML = "３階で出会ったあの剣士なのか…？<br>彼は虚ろな目で宙を見つめ、全身を震わせている。<br><br>「アァ…オマエタチモ、俺ノ邪魔ヲスルノカ…ッ！」<br><br>突如、男が奇声を上げ、得物を振りかざして襲いかかってきた！";
+                desc.innerHTML = "（……彼は、３階でロングソードをくれた気前のよい冒険者だ。あの快活な笑顔は鳴りを潜め、今はただ血走った双眸で虚空を睨みつけている）<br><br>迷宮の瘴気にあてられ、彼の精神は完全に崩壊していた。口元から止めどなく涎を垂らし、かつて君たちに軽口を叩いたその口で、今は意味をなさない呪詛を吐き続けている。<br><br>「アァ…モウ…モウ何モカモオシマイダ…！オマエタチモ、俺ノ邪魔ヲスルノカ…ッ！」<br><br>突如、男が奇声を上げ、得物を振りかざして襲いかかってきた！";
 
                 const btnFight = document.createElement('button');
                 btnFight.className = 'btn';
                 btnFight.textContent = '戦う';
                 btnFight.onclick = () => {
+                    this.karma += 10;
                     this.addLog("狂気に飲まれた剣士が襲いかかってきた！");
                     this.npcFlags.event7FDone = true;
                     document.getElementById('event-screen').style.display = 'none';
@@ -1016,7 +1064,8 @@ class Game {
                 btnRun.style.color = '#888';
                 btnRun.textContent = '逃げる';
                 btnRun.onclick = () => {
-                    this.addLog("この異常な剣士と真正面から刃を交えるのは危険だ。あなたは強引に包囲を突破した。");
+                    this.karma -= 10;
+                    this.addLog("狂気に蝕まれた彼から目を背け、あなたは足早にその場を離れた。");
                     this.npcFlags.event7FDone = true;
 
                     // 80% HP reduction
@@ -1040,6 +1089,7 @@ class Game {
                 btnLoot.style.color = '#888';
                 btnLoot.textContent = '奪い取る';
                 btnLoot.onclick = () => {
+                    this.karma -= 20;
                     this.addLog("これは彼にはもう必要のない物だ。あなたは遺体から装備品を回収した。");
                     this.npcFlags.event7FDone = true;
 
@@ -1059,6 +1109,7 @@ class Game {
                 btnNod.className = 'btn';
                 btnNod.textContent = '頷く';
                 btnNod.onclick = () => {
+                    this.karma += 20;
                     this.addLog("キングゴブリンは感謝を示すように低く唸った。");
                     this.npcFlags.friendGoblin = true;
                     this.npcFlags.event6FDone = true;
@@ -1146,6 +1197,8 @@ class Game {
                         // Perma-death logic
                         sacrifice.hp = 0;
                         sacrifice.baseVit = -999; // Ensures they cannot be revived normally
+                        this.karma -= 100;
+                        this.addLog(`${sacrifice.name}「う、うそ。今まで一緒にやってきてここまできたんだぞ。一緒にアビスロードを倒そうよ・・・なあ・・・」`);
                         this.addLog(`闇の賢者の魔術により、${sacrifice.name}の命が吸い尽くされた……！`);
 
                         this.npcFlags.event8FDone = true;
@@ -1169,6 +1222,7 @@ class Game {
                 btnReject.style.marginTop = '15px';
                 btnReject.textContent = '拒絶する';
                 btnReject.onclick = () => {
+                    this.karma += 50;
                     this.addLog("「……そうか。ならば己の無力を呪いながら死ぬが良い」");
                     this.addLog("老人は薄れ、闇に溶け込むように消滅した。");
                     this.npcFlags.event8FDone = true;
@@ -1186,6 +1240,7 @@ class Game {
                 btnThanks.className = 'btn';
                 btnThanks.textContent = '受け取る';
                 btnThanks.onclick = () => {
+                    this.karma += 20;
                     this.addLog("恩返しとして、伝説の装備セットを受け取った！");
                     this.npcFlags.event9FDone = true;
 
@@ -1206,6 +1261,7 @@ class Game {
                 btnLoot.style.color = '#888';
                 btnLoot.textContent = '奪い取る';
                 btnLoot.onclick = () => {
+                    this.karma -= 20;
                     this.addLog("これは彼にはもう必要のない物だ。遺体から装備品を回収した。");
                     this.npcFlags.event9FDone = true;
 
@@ -1660,6 +1716,15 @@ class Game {
                 const specialWpn = { name: "名刀・狂瀾", type: "weapon", atk: 65, req: { str: 20 }, desc: "生気を吸う妖刀(ATK+65)" };
                 this.inventory.push(specialWpn);
             }
+            if (this.currentBattle.isGoblinEvent) {
+                this.addLog("キングゴブリンを打ち倒すと、その手から小瓶と鉈が転がり落ちた…。");
+                const elixir = {
+                    name: '妖精の霊薬', type: 'consumable', infinite: true, targetAll: true, desc: '何度でも使える全体回復薬',
+                    effect: () => { this.party.forEach(mbr => { if (mbr.hp > 0) mbr.hp = Math.min(mbr.maxHp, mbr.hp + 50); }); this.addLog(`妖精の霊薬を使った！全員のHPが50回復！`); }
+                };
+                const goblinWpn = { name: "キングゴブリンの鉈", type: "weapon", atk: 25, req: { str: 15 }, desc: "荒々しい一撃を放つ鉈(ATK+25)" };
+                this.inventory.push(elixir, goblinWpn);
+            }
 
             const exp = this.currentBattle.monsters.reduce((sum, m) => sum + m.exp, 0);
             this.party.forEach(p => {
@@ -1764,6 +1829,7 @@ class Game {
                     name: name,
                     time: this.clearTime,
                     timeStr: timeStr,
+                    karma: this.karma,
                     timestamp: Date.now()
                 }).then(() => {
                     btn.textContent = '登録完了！';
@@ -1793,8 +1859,9 @@ class Game {
                     data.name.replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m])) : '名無し';
                 const safeTime = typeof data.timeStr === 'string' ?
                     data.timeStr.replace(/[&<>'"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[m])) : '';
+                const karmaStr = data.karma !== undefined ? `<span style="color:#aaf; font-size:12px; margin-left:10px;">[カルマ: ${parseInt(data.karma, 10)}]</span>` : '';
 
-                html += `<div class="rank-item"><span>${rank}. ${safeName}</span> <span style="color:#ffcc00;">${safeTime}</span></div>`;
+                html += `<div class="rank-item"><span>${rank}. ${safeName}${karmaStr}</span> <span style="color:#ffcc00;">${safeTime}</span></div>`;
                 rank++;
             });
             document.getElementById('ranking-container').innerHTML = html || 'まだ記録がありません。';
