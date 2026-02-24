@@ -141,6 +141,24 @@ _generatedMonsters.forEach((m, idx) => {
     });
 });
 
+const ENEMY_SKILLS = {
+    0: { name: '分裂', chance: 0.5, type: 'summon', desc: '体が二つに分かれた！' },
+    1: { name: '吸血', chance: 0.4, type: 'drain', desc: '鋭い牙で噛みついた！', mult: 1.2 },
+    2: { name: '粘着糸', chance: 0.3, type: 'attack', desc: '粘着質な糸を吐き出した！', mult: 1.5 },
+    3: { name: '毒牙', chance: 0.4, type: 'pierce', desc: '毒の牙が深く突き刺さる！', mult: 1.5 },
+    4: { name: '仲間を呼ぶ', chance: 0.3, type: 'summon', desc: '仲間を呼び寄せた！' },
+    5: { name: '骨投げ', chance: 0.4, type: 'attack', desc: '自分の骨を投げつけてきた！', mult: 1.8 },
+    6: { name: 'エナジードレイン', chance: 0.4, type: 'drain', desc: '生命力を吸い取られた！', mult: 1.5 },
+    7: { name: '痛恨の一撃', chance: 0.3, type: 'attack', desc: '渾身の一撃が叩き込まれた！', mult: 2.5 },
+    8: { name: '暗黒の炎', chance: 0.3, type: 'aoe', desc: '禍々しい炎が周囲を焼き尽くす！', mult: 1.2 },
+    9: { name: '炎', chance: 0.4, type: 'aoe', desc: '灼熱の炎を吐き出した！', mult: 1.5 },
+    10: { name: '腐敗液', chance: 0.4, type: 'pierce', desc: '腐食性の液体を浴びせかけてきた！', mult: 1.5 },
+    11: { name: 'ファイアボール', chance: 0.5, type: 'attack', desc: '巨大な火球を放った！', mult: 2.0 },
+    12: { name: '吸血', chance: 0.4, type: 'drain', desc: '闇の中から牙を突き立てた！', mult: 1.4 },
+    13: { name: 'メテオ', chance: 0.3, type: 'aoe', desc: '宇宙から隕石が降り注ぐ！', mult: 2.0 },
+    'boss': { name: '絶望の波動', chance: 0.25, type: 'aoe', desc: '周囲の空気が重く震える...！', mult: 2.5 }
+};
+
 function generateMaze(size, depth = 0) {
     const map = Array(size).fill().map(() => Array(size).fill(1));
     const rooms = [];
@@ -1570,15 +1588,76 @@ class Game {
                 const aliveParty = this.party.filter(p => p.hp > 0);
                 if (aliveParty.length === 0) break;
 
-                const pIdx = this.party.findIndex(p => p === aliveParty[Math.floor(Math.random() * aliveParty.length)]);
-                const target = this.party[pIdx];
-                if (target) {
-                    const armDef = (target.equipment.armor?.def || 0) + (target.equipment.accessory?.def || 0);
-                    const dmg = Math.max(1, action.actor.atk - Math.floor((target.vit + armDef) / 2) + Math.floor(Math.random() * 3));
-                    target.hp = Math.max(0, target.hp - dmg);
-                    this.addLog(`${action.actor.name}の攻撃！ ${target.name}は${dmg}のダメージ！`);
-                    this.showPartyHitEffect(pIdx, dmg);
-                    audio.playSE('se_damage');
+                const skill = this.currentBattle.isBoss ? ENEMY_SKILLS['boss'] : ENEMY_SKILLS[action.actor.imgIndex];
+                if (skill && Math.random() < skill.chance) {
+                    this.addLog(`${action.actor.name}の${skill.name}！`);
+                    if (skill.desc) this.addLog(skill.desc);
+
+                    const target = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+                    const pIdx = this.party.indexOf(target);
+
+                    if (skill.type === 'attack') {
+                        const armDef = (target.equipment.armor?.def || 0) + (target.equipment.accessory?.def || 0);
+                        const dmg = Math.max(1, Math.floor((action.actor.atk * skill.mult) - (target.vit + armDef) / 2) + Math.floor(Math.random() * 3));
+                        target.hp = Math.max(0, target.hp - dmg);
+                        this.addLog(`${target.name}は${dmg}のダメージ！`);
+                        this.showPartyHitEffect(pIdx, dmg);
+                        audio.playSE('se_damage');
+                    } else if (skill.type === 'pierce') {
+                        const dmg = Math.max(1, Math.floor(action.actor.atk * skill.mult) + Math.floor(Math.random() * 3));
+                        target.hp = Math.max(0, target.hp - dmg);
+                        this.addLog(`${target.name}は防御不能の${dmg}ダメージ！`);
+                        this.showPartyHitEffect(pIdx, dmg);
+                        audio.playSE('se_damage');
+                    } else if (skill.type === 'aoe') {
+                        audio.playSE('se_magic');
+                        this.party.forEach((p, idx) => {
+                            if (p.hp > 0) {
+                                const armDef = (p.equipment.armor?.def || 0) + (p.equipment.accessory?.def || 0);
+                                const dmg = Math.max(1, Math.floor((action.actor.atk * skill.mult) - (p.vit + armDef) / 2) + Math.floor(Math.random() * 3));
+                                p.hp = Math.max(0, p.hp - dmg);
+                                this.addLog(`${p.name}に${dmg}のダメージ！`);
+                                this.showPartyHitEffect(idx, dmg);
+                            }
+                        });
+                    } else if (skill.type === 'drain') {
+                        const armDef = (target.equipment.armor?.def || 0) + (target.equipment.accessory?.def || 0);
+                        const dmg = Math.max(1, Math.floor((action.actor.atk * skill.mult) - (target.vit + armDef) / 2) + Math.floor(Math.random() * 3));
+                        target.hp = Math.max(0, target.hp - dmg);
+                        const heal = Math.floor(dmg * 0.5);
+                        action.actor.currentHp = Math.min(action.actor.hp, action.actor.currentHp + heal);
+                        this.addLog(`${target.name}に${dmg}のダメージ！ ${action.actor.name}は${heal}回復した！`);
+                        this.showPartyHitEffect(pIdx, dmg);
+                        audio.playSE('se_damage');
+                    } else if (skill.type === 'summon') {
+                        if (this.currentBattle.monsters.length < 5) {
+                            const newIdx = this.currentBattle.monsters.length;
+                            const mData = { ...action.actor, id: `monster-${newIdx}`, currentHp: action.actor.hp, deadLogged: false };
+                            const sameType = this.currentBattle.monsters.filter(m => (m.originalName || m.name).startsWith(mData.originalName || mData.name.split(' ')[0]));
+                            mData.name = (mData.originalName || mData.name.split(' ')[0]) + " " + String.fromCharCode(65 + sameType.length);
+                            this.currentBattle.monsters.push(mData);
+                            const mo = document.getElementById('monster-overlay');
+                            const container = document.createElement('div');
+                            container.className = 'monster-img-container';
+                            container.id = `monster-img-${newIdx}`;
+                            container.innerHTML = mData.svg;
+                            mo.appendChild(container);
+                            this.addLog(`新たな${mData.originalName || mData.name.split(' ')[0]}が現れた！`);
+                        } else {
+                            this.addLog("しかし仲間を呼ぶスペースがない！");
+                        }
+                    }
+                } else {
+                    const target = aliveParty[Math.floor(Math.random() * aliveParty.length)];
+                    const pIdx = this.party.indexOf(target);
+                    if (target) {
+                        const armDef = (target.equipment.armor?.def || 0) + (target.equipment.accessory?.def || 0);
+                        const dmg = Math.max(1, action.actor.atk - Math.floor((target.vit + armDef) / 2) + Math.floor(Math.random() * 3));
+                        target.hp = Math.max(0, target.hp - dmg);
+                        this.addLog(`${action.actor.name}の攻撃！ ${target.name}は${dmg}のダメージ！`);
+                        this.showPartyHitEffect(pIdx, dmg);
+                        audio.playSE('se_damage');
+                    }
                 }
 
                 this.party.forEach(p => {
