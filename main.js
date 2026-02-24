@@ -901,8 +901,15 @@ class Game {
                             id: 'monster-0',
                             name: "キングゴブリン",
                             originalName: "キングゴブリン",
-                            hp: 900, maxHp: 900, currentHp: 900, atk: 95, agi: 25, exp: 600, level: 6,
+                            hp: 1500, maxHp: 1500, currentHp: 1500, atk: 150, agi: 25, exp: 600, level: 8,
                             svg: `<img src="assets/event_6parent_enemy.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.5);" />`
+                        },
+                        {
+                            id: 'monster-1',
+                            name: "スモールゴブリン",
+                            originalName: "スモールゴブリン",
+                            hp: 40, maxHp: 40, currentHp: 40, atk: 10, agi: 5, exp: 20, level: 4,
+                            svg: `<img src="assets/event_4child.png" style="width:100%; height:100%; object-fit:contain; transform:scale(0.8);" />`
                         }],
                         turnOrder: [],
                         phase: 'INPUT',
@@ -1038,7 +1045,7 @@ class Game {
                             id: 'monster-0',
                             name: "狂乱の剣士",
                             originalName: "狂乱の剣士",
-                            hp: 1500, maxHp: 1500, currentHp: 1500, atk: 120, agi: 45, exp: 900, level: 7,
+                            hp: 2500, maxHp: 2500, currentHp: 2500, atk: 190, agi: 85, exp: 900, level: 7,
                             svg: `<img src="assets/event_7mad.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.2);" />`
                         }],
                         turnOrder: [],
@@ -1065,7 +1072,7 @@ class Game {
                 btnRun.textContent = '逃げる';
                 btnRun.onclick = () => {
                     this.karma -= 10;
-                    this.addLog("狂気に蝕まれた彼から目を背け、あなたは足早にその場を離れた。");
+                    this.addLog("狂気に蝕まれた彼から目を背け、あなたは命からがらその場を離れた。");
                     this.npcFlags.event7FDone = true;
 
                     // 80% HP reduction
@@ -1136,7 +1143,7 @@ class Game {
                             id: 'monster-0',
                             name: "怒りのキングゴブリン",
                             originalName: "怒りのキングゴブリン",
-                            hp: 900, maxHp: 900, currentHp: 900, atk: 95, agi: 25, exp: 600, level: 6,
+                            hp: 1300, maxHp: 1300, currentHp: 1300, atk: 130, agi: 25, exp: 600, level: 6,
                             svg: `<img src="assets/event_6parent_enemy.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.5);" />`
                         }],
                         turnOrder: [],
@@ -1379,7 +1386,7 @@ class Game {
             ...baseMonster,
             name: 'アビスロード',
             hp: 8500,
-            atk: 180,
+            atk: 280,
             agi: 60,
             exp: 30000,
             level: 10,
