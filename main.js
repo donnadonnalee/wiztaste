@@ -476,8 +476,23 @@ class Game {
 
     useItem(charIdx, itemIdx) {
         const item = this.inventory[itemIdx];
-        if (charIdx === null) { item.effect(this.party); }
-        else {
+        if (charIdx === null || item.targetAll) {
+            if (item.effect) {
+                item.effect(this.party);
+            } else {
+                // Fallback for serialized special items
+                if (item.name === '妖精の霊薬') {
+                    this.party.forEach(p => { if (p.hp > 0) p.hp = Math.min(p.maxHp, p.hp + 50); });
+                    UI.addLog(`妖精の霊薬を使った！全員のHPが50回復！`);
+                } else if (item.hpRestore) {
+                    this.party.forEach(p => { if (p.hp > 0) p.hp = Math.min(p.maxHp, p.hp + item.hpRestore); });
+                    UI.addLog(`${item.name}を使った！全員のHPが回復！`);
+                } else if (item.mpRestore) {
+                    this.party.forEach(p => { if (p.hp > 0) p.mp = Math.min(p.maxMp, p.mp + item.mpRestore); });
+                    UI.addLog(`${item.name}を使った！全員のMPが回復！`);
+                }
+            }
+        } else {
             const target = this.party[charIdx];
             if (item.hpRestore) { target.hp = Math.min(target.maxHp, target.hp + item.hpRestore); UI.addLog(`${target.name}は${item.name}を使った。`); }
             if (item.mpRestore) { target.mp = Math.min(target.maxMp, target.mp + item.mpRestore); UI.addLog(`${target.name}は${item.name}を使った。`); }

@@ -114,7 +114,7 @@ const Events = {
                 game.npcFlags.rewardedGoblin = true;
                 game.npcFlags.event4FDone = true; // Mark as done again so reunion doesn't repeat
                 const elixir = {
-                    name: '妖精の霊薬', type: 'consumable', infinite: true, targetAll: true, desc: '何度でも使える全体回復薬',
+                    name: '妖精の霊薬', type: 'consumable', infinite: true, targetAll: true, hpRestore: 50, desc: '何度でも使える全体回復薬',
                     effect: () => {
                         game.party.forEach(mbr => { if (mbr.hp > 0) mbr.hp = Math.min(mbr.maxHp, mbr.hp + 50); });
                         UI.addLog(`妖精の霊薬を使った！全員のHPが50回復！`);
