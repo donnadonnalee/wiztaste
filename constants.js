@@ -229,7 +229,7 @@ function generateAllLevels() {
                 for (let c = 0; c < map[r].length; c++) if (map[r][c] === 3) map[r][c] = 8;
             }
         }
-        if (i >= 1 && i <= 8) {
+        if (i >= 0 && i <= 8) {
             let emptySpots = [];
             for (let r = 1; r < map.length - 1; r++) {
                 for (let c = 1; c < map[r].length - 1; c++) {

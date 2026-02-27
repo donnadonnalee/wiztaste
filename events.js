@@ -36,8 +36,8 @@ const Events = {
             img.onerror = () => { img.style.display = 'none'; };
         }
 
-        if (floor === 2) this.handleEvent2F(game, title, desc, options);
-        else if (floor === 3) this.handleEvent3F(game, title, desc, options);
+        if (floor === 1) this.handleEvent1F(game, title, desc, options);
+        else if (floor === 2) this.handleEvent2F(game, title, desc, options);
         else if (floor === 4) this.handleEvent4F(game, title, desc, options);
         else if (floor === 5) this.handleEvent5F(game, title, desc, options);
         else if (floor === 7) this.handleEvent7F(game, title, desc, options);
@@ -55,7 +55,7 @@ const Events = {
 
     handleEvent2F: function (game, title, desc, options) {
         title.textContent = "老師";
-        const allHighLevel = game.party.every(p => p.level >= 50);
+        const allHighLevel = game.party.every(p => p.level >= 30);
         if (allHighLevel) {
             desc.innerHTML = "静かに目を閉じた老人が、おもむろに口を開いた。<br><br>「汝、さらなる高みへ導こう。心して励むが良い。」<br><br>※現在のステータスがベースステータスとして固定されます。<br>これにより、強力な武器や防具の装備条件をクリアしやすくなります。";
             const btn = document.createElement('button');
@@ -67,12 +67,74 @@ const Events = {
             };
             options.appendChild(btn);
         } else {
-            desc.innerHTML = "静かに目を閉じた老人が、おもむろに口を開いた。<br><br>「汝、本当の絶望を知らぬようだ。」<br><br>※修行を受けるには全員がレベル50以上である必要があります。";
+            desc.innerHTML = "静かに目を閉じた老人が、おもむろに口を開いた。<br><br>「汝、本当の絶望を知らぬようだ。」<br><br>※修行を受けるには全員がレベル30以上である必要があります。";
             const btn = document.createElement('button');
             btn.className = 'btn'; btn.textContent = '立ち去る';
             btn.onclick = () => game.closeEvent();
             options.appendChild(btn);
         }
+    },
+
+    handleEvent1F: function (game, title, desc, options) {
+        title.textContent = "古びた手鏡";
+        desc.innerHTML = "冷たい石畳の上に、装飾の施された手鏡が落ちている。<br>鏡面には、誰かのものであろう激しい情念が焼き付いているようだ。<br><br>この鏡は、持ち主の業（カルマ）を反射し、運命を歪めるという。";
+        const btnTake = document.createElement('button');
+        btnTake.className = 'btn'; btnTake.textContent = '鏡を拾い上げる';
+        btnTake.onclick = () => {
+            game.karma += 5; UI.addLog("不思議な手鏡を手に入れた。冷たい感触が手に残る。");
+            game.npcFlags.hasMirror = true;
+            game.npcFlags.event1FDone = true;
+            game.inventory.push({
+                name: '不思議な手鏡', type: 'consumable', infinite: true, targetAll: true,
+                desc: 'カルマを映し出す鏡。所持しているだけで運命を変える。',
+                effect: () => { Events.showMirrorUI(game); }
+            });
+            game.closeEvent();
+        };
+        const btnBreak = document.createElement('button');
+        btnBreak.className = 'btn'; btnBreak.textContent = '鏡を叩き割る';
+        btnBreak.onclick = () => {
+            game.karma -= 20; UI.addLog("あなたは不吉な鏡を粉々に砕いた。耳障りな甲高い音が響き渡る。");
+            game.npcFlags.event1FDone = true;
+            game.closeEvent();
+        };
+        options.appendChild(btnTake); options.appendChild(btnBreak);
+    },
+
+    showMirrorUI: function (game) {
+        game.state = 'EVENT';
+        const screen = document.getElementById('event-screen');
+        const title = document.getElementById('event-title');
+        const desc = document.getElementById('event-desc');
+        const img = document.getElementById('event-img');
+        const options = document.getElementById('event-options');
+
+        if (screen) screen.style.display = 'flex';
+        title.textContent = "不思議な手鏡";
+        if (img) { img.src = "assets/event_1.png"; img.style.display = "block"; }
+
+        const k = game.karma;
+        const regenProb = Math.abs(k) / 100;
+        const drainProb = regenProb / 10;
+
+        let msg = "";
+        if (k > 100) msg = "鏡面は清らかな光を放っている。徳を積んだあなたの魂が癒やしを求めている。";
+        else if (k >= 0) msg = "鏡面は曇っている。まだあなたの魂は定まっていないようだ。";
+        else if (k > -100) msg = "鏡の奥から不穏な霧が湧き出している。悪徳があなたを蝕み始めている。";
+        else msg = "鏡面はどす黒く染まり、悦びに震えている。邪悪な力があなたの魔を研ぎ澄ましている。";
+
+        const type = k >= 0 ? "HP" : "MP";
+        const dType = k >= 0 ? "MP" : "HP";
+
+        desc.innerHTML = `${msg}<br><br><strong>カルマ：${k}</strong><br><br>` +
+            `<span style="color:#5f5;">${type}回復：${(regenProb * 100).toFixed(1)}% (毎歩)</span><br>` +
+            `<span style="color:#f55;">${dType}減少：${(drainProb * 100).toFixed(1)}% (毎歩)</span>`;
+
+        options.innerHTML = '';
+        const btnBack = document.createElement('button');
+        btnBack.className = 'btn'; btnBack.textContent = '鏡をしまう';
+        btnBack.onclick = () => game.closeEvent();
+        options.appendChild(btnBack);
     },
 
     handleEvent3F: function (game, title, desc, options) {
@@ -90,13 +152,13 @@ const Events = {
         };
         options.appendChild(btn);
         const btnFight = document.createElement('button');
-        btnFight.className = 'btn'; btnFight.style.color = '#f55'; btnFight.textContent = '戦う';
+        btnFight.className = 'btn'; btnFight.textContent = '戦う';
         btnFight.onclick = () => {
             game.karma -= 70; UI.addLog("「やれやれ、恩を仇で返すとはこのことか。遊んでやるよ！」");
             game.npcFlags.event3FDone = true;
             game.closeEvent();
             game.startCustomBattle([{
-                id: 'monster-0', name: "剣士アルトリウス", hp: 800, maxHp: 800, currentHp: 800, atk: 60, agi: 30, exp: 200, level: 3,
+                id: 'monster-0', name: "剣士アルトリウス", hp: 300, maxHp: 300, currentHp: 300, atk: 30, agi: 10, exp: 400, level: 3,
                 svg: `<img src="assets/event_3.png" style="width:100%; height:100%; object-fit:contain;" />`
             }], { isArtoriusLoot: true });
         };
@@ -124,6 +186,25 @@ const Events = {
                 game.closeEvent();
             };
             options.appendChild(btnAccept);
+            const btnPlunder = document.createElement('button');
+            btnPlunder.className = 'btn'; btnPlunder.textContent = '略奪';
+            btnPlunder.onclick = () => {
+                game.karma -= 50; UI.addLog("人間の平和と安心のため、あなたは再会を喜ぶゴブリン親子に武器を向けた。");
+                game.npcFlags.rewardedGoblin = true;
+                game.npcFlags.event4FDone = true;
+                game.closeEvent();
+                game.startCustomBattle([
+                    {
+                        id: 'monster-0', name: "キングゴブリン", hp: 1300, maxHp: 1300, currentHp: 1300, atk: 130, agi: 25, exp: 600, level: 4,
+                        svg: `<img src="assets/event_6parent_friend.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.5);" />`
+                    },
+                    {
+                        id: 'monster-1', name: "スモールゴブリン", hp: 40, maxHp: 40, currentHp: 40, atk: 10, agi: 5, exp: 20, level: 4,
+                        svg: `<img src="assets/event_4child.png" style="width:100%; height:100%; object-fit:contain; transform:scale(0.8);" />`
+                    }
+                ], { isGoblinPlunder: true });
+            };
+            options.appendChild(btnPlunder);
         } else {
             title.textContent = "はぐれゴブリン";
             desc.innerHTML = "親とはぐれた子供のゴブリンが壁の隅で震えている。<br><br>ひどく怯えており、こちらに襲いかかってくる様子はない。";
@@ -170,7 +251,7 @@ const Events = {
         };
         options.appendChild(btnHelp); options.appendChild(btnAbandon);
         const btnPlunder = document.createElement('button');
-        btnPlunder.className = 'btn'; btnPlunder.style.color = '#f55'; btnPlunder.textContent = '略奪';
+        btnPlunder.className = 'btn'; btnPlunder.textContent = '略奪';
         btnPlunder.onclick = () => {
             game.karma -= 30; UI.addLog("あなたは弱り切った冒険者から荷物を奪い取るべく襲いかかった。");
             game.npcFlags.event5FDone = true;
@@ -200,10 +281,16 @@ const Events = {
             };
             options.appendChild(btnFight);
             const btnRun = document.createElement('button');
-            btnRun.className = 'btn'; btnRun.style.borderColor = '#888'; btnRun.style.color = '#888'; btnRun.textContent = '逃げる';
+            btnRun.className = 'btn'; btnRun.textContent = '逃げる';
             btnRun.onclick = () => {
                 game.karma -= 10; UI.addLog("狂気に侵された彼から目を背け、あなたは命からがらその場を離れた。");
-                game.npcFlags.event7FDone = true;
+                // Don't set event7FDone = true so it can re-trigger
+                // Move player back one tile to avoid infinite loop
+                const dir = game.playerPos.dir;
+                const dx = [0, 1, 0, -1][dir], dy = [-1, 0, 1, 0][dir];
+                game.playerPos.x -= dx;
+                game.playerPos.y -= dy;
+
                 game.party.forEach(p => { if (p.hp > 0) p.hp = Math.max(1, Math.floor(p.hp * 0.2)); });
                 UI.addLog("逃走の代償として、パーティ全員が深手を負った！（HP残り20%）");
                 game.closeEvent();
@@ -236,7 +323,7 @@ const Events = {
             };
             options.appendChild(btnNod);
             const btnFight = document.createElement('button');
-            btnFight.className = 'btn'; btnFight.style.color = '#f55'; btnFight.textContent = '戦う';
+            btnFight.className = 'btn'; btnFight.textContent = '戦う';
             btnFight.onclick = () => {
                 game.npcFlags.event6FDone = true;
                 game.closeEvent();
@@ -265,7 +352,7 @@ const Events = {
 
     handleEvent8F: function (game, title, desc, options) {
         title.textContent = "闇の賢者";
-        desc.innerHTML = "黒衣に身を包んだ、底知れぬ魔力を放つ老人が佇んでいる。<br><br>「ここまで辿り着くとはな。だが、お前たちの力では最深部の主には勝てまい。」<br>「どうだ。使えぬ者一人の『命の灯火』を吾輩に差し出さぬか？<br>それは、組織としての合理的な判断ではないかね……？」<br><br>※同意した場合、選択したメンバーは<strong>永久にロスト</strong>しますが、引き換えに最強クラスの装備セットを入手します。";
+        desc.innerHTML = "黒衣に身を包んだ、底知れぬ魔力を放つ老人が佇んでいる。<br><br>「ここまで辿り着くとはな。だが、お前たちの力では最深部の主には勝てまい。」<br>「どうだ。使えぬ者一人の『命の灯火』を私に差し出さぬか？<br>それは、組織としての合理的な判断ではないかね……？」<br><br>※同意した場合、選択したメンバーは<strong>永久にロスト</strong>しますが、引き換えに最強クラスの装備セットを入手します。";
         const alive = game.party.filter(p => p.hp > 0);
         if (alive.length <= 1) {
             const btn = document.createElement('button');
@@ -279,7 +366,7 @@ const Events = {
         } else {
             alive.forEach(p => {
                 const btn = document.createElement('button');
-                btn.className = 'btn'; btn.style.color = '#f55'; btn.textContent = `${p.name}を犠牲にする`;
+                btn.className = 'btn'; btn.textContent = `${p.name}を犠牲にする`;
                 btn.onclick = () => {
                     if (!confirm(`本当に ${p.name} を生贄に捧げますか？\n(二度と復帰できなくなります)`)) return;
                     UI.addLog(`${p.name}「う、うそ。今まで一緒にやってここまで来たんだぞ。一緒にアビスロードを倒そう……なあ……」`);
@@ -291,6 +378,18 @@ const Events = {
                 };
                 options.appendChild(btn);
             });
+            const btnFight = document.createElement('button');
+            btnFight.className = 'btn'; btnFight.textContent = '戦う';
+            btnFight.onclick = () => {
+                game.karma -= 20; UI.addLog("「ほう、私に刃を向けるか。その愚かさ、嫌いではないぞ。」");
+                game.npcFlags.event8FDone = true;
+                game.closeEvent();
+                game.startCustomBattle([{
+                    id: 'monster-0', name: "闇の賢者", hp: 6000, maxHp: 6000, currentHp: 6000, atk: 220, agi: 70, exp: 5000, level: 8,
+                    svg: `<img src="assets/event_8.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.3);" />`
+                }], { isDarkSageLoot: true });
+            };
+            options.appendChild(btnFight);
             const btnReject = document.createElement('button');
             btnReject.className = 'btn'; btnReject.textContent = '拒絶する';
             btnReject.onclick = () => {
@@ -313,7 +412,7 @@ const Events = {
                 game.karma += 20; UI.addLog("恩返しとして、伝説の装備セットを受け取った！");
                 game.npcFlags.event9FDone = true;
                 game.inventory.push(
-                    { name: "英雄の聖剣", type: "weapon", atk: 50, desc: "恩知らずには扱えない伝説の剣" },
+                    { name: "英雄の聖剣", type: "weapon", atk: 50, desc: "伝説の剣" },
                     { name: "英雄の鎧", type: "armor", def: 40, desc: "強固な守護をもたらす鎧" },
                     { name: "光の護符", type: "accessory", atk: 10, def: 10, desc: "全ステータスを底上げする護符" }
                 );
@@ -323,7 +422,7 @@ const Events = {
         } else {
             desc.innerHTML = "通路の先で、冒険者の無惨な死体を発見した。<br>５階で見捨てたあの男のようだ...。<br><br>彼の傍らには、禍々しいオーラを放つ<br>装備品が転がっている。";
             const btn = document.createElement('button');
-            btn.className = 'btn'; btn.textContent = '奪い取る';
+            btn.className = 'btn'; btn.textContent = '遺体をあさる';
             btn.onclick = () => {
                 game.karma -= 20; UI.addLog("これは彼にはもう必要のない物だ。あなたは遺体から装備品を回収した。");
                 game.npcFlags.event9FDone = true;

@@ -38,7 +38,7 @@ class Game {
             helpedAdventurer: false, event5FDone: false, event9FDone: false,
             metSwordsman: false, event3FDone: false, event7FDone: false,
             savedGoblin: false, friendGoblin: false, event4FDone: false, event6FDone: false,
-            event8FDone: false
+            event8FDone: false, hasMirror: false, event1FDone: false
         };
         this.elapsedTimeAtSave = 0;
         this.discardingItemIdx = -1;
@@ -286,10 +286,46 @@ class Game {
         if (action === 'forward' || action === 'backward') {
             const m = action === 'forward' ? 1 : -1;
             const nx = x + dx * m, ny = y + dy * m;
-            if (map[ny]?.[nx] !== 1 && map[ny]?.[nx] !== 4) { this.playerPos.x = nx; this.playerPos.y = ny; this.checkTile(); }
+            if (map[ny]?.[nx] !== 1 && map[ny]?.[nx] !== 4) {
+                this.playerPos.x = nx; this.playerPos.y = ny;
+                this.updateMirrorEffect();
+                this.checkTile();
+            }
         } else if (action === 'left') this.playerPos.dir = (dir + 3) % 4;
         else if (action === 'right') this.playerPos.dir = (dir + 1) % 4;
         this.updateVisited(); this.render();
+    }
+
+    updateMirrorEffect() {
+        if (!this.npcFlags.hasMirror) return;
+        const k = this.karma;
+        const regenProb = Math.abs(k) / 100;
+        const drainProb = regenProb / 10;
+
+        const applyStat = (prob, type, isGain) => {
+            let amount = Math.floor(prob);
+            if (Math.random() < (prob - amount)) amount += 1;
+            if (amount <= 0) return;
+
+            this.party.forEach(p => {
+                if (p.hp <= 0) return;
+                if (type === 'HP') {
+                    if (isGain) p.hp = Math.min(p.maxHp, p.hp + amount);
+                    else p.hp = Math.max(1, p.hp - amount);
+                } else {
+                    if (isGain) p.mp = Math.min(p.maxMp, p.mp + amount);
+                    else p.mp = Math.max(0, p.mp - amount);
+                }
+            });
+        };
+
+        if (k >= 0) {
+            applyStat(regenProb, 'HP', true);
+            applyStat(drainProb, 'MP', false);
+        } else {
+            applyStat(regenProb, 'MP', true);
+            applyStat(drainProb, 'HP', false);
+        }
     }
 
     checkTile() {
@@ -392,13 +428,29 @@ class Game {
         }
         UI.addLog(`経験値を ${totalExp} 獲得した！`);
 
-        if (bt.isArtoriusLoot) this.inventory.push({ name: "アルトリウスの銘刀", type: "weapon", atk: 25, req: { str: 18 }, desc: "名剣士の愛刀(ATK+25)" });
-        if (bt.isAdventurerLoot) {
-            this.inventory.push({ id: 2, name: '上傷薬', type: 'consumable', level: 4, hpRestore: 100, desc: 'HPを100回復' });
-            this.inventory.push({ name: "冒険者の形見", type: "accessory", def: 5, desc: "誰かの祈りがこもっている" });
-        }
         if (bt.isSwordsmanEvent) this.inventory.push({ name: "深淵のロングソード", type: "weapon", atk: 55, req: { str: 40 }, desc: "瘴気を帯びた伝説の剣(ATK+55)" });
         if (bt.isGoblinEvent) this.inventory.push({ name: "キングの冠", type: "accessory", luk: 30, desc: "王の威厳(LUK+30)" });
+        if (bt.isDarkSageLoot) {
+            UI.addLog("闇の賢者の残した「闇の叡智の結晶」を手に入れた！");
+            this.inventory.push({
+                name: '闇の叡智の結晶', type: 'consumable', infinite: true, targetAll: true, mpRestore: 20, desc: '何度でも使える魔力の結晶',
+                effect: () => {
+                    game.party.forEach(p => { if (p.hp > 0) p.mp = Math.min(p.maxMp, p.mp + 20); });
+                    UI.addLog(`闇の叡智の結晶から魔力が溢れ出す！全員のMPが20回復した！`);
+                }
+            });
+        }
+        if (bt.isGoblinPlunder) {
+            UI.addLog("ゴブリンの親子から「妖精の霊薬」と「ゴブリンの鉈」を奪い取った！");
+            this.inventory.push({
+                name: '妖精の霊薬', type: 'consumable', infinite: true, targetAll: true, hpRestore: 50, desc: '何度でも使える全体回復薬',
+                effect: () => {
+                    game.party.forEach(mbr => { if (mbr.hp > 0) mbr.hp = Math.min(mbr.maxHp, mbr.hp + 50); });
+                    UI.addLog(`妖精の霊薬を使った！全員のHPが50回復！`);
+                }
+            });
+            this.inventory.push({ name: "ゴブリンの鉈", type: "weapon", atk: 30, req: { str: 20 }, desc: "業物だがひどく血生臭い鉈(ATK+30)" });
+        }
 
         if (Math.random() < 0.3) {
             console.log("Triggering treasure event");
