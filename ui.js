@@ -202,14 +202,27 @@ const UI = {
             const div = document.createElement('div');
             div.id = `party-member-${i}`;
             div.className = `party-member ${game.state === 'BATTLE' && game.turnIndex === i ? 'active' : ''}`;
+            div.style.position = 'relative';
+            div.style.overflow = 'hidden';
+
             const hpW = (p.hp / p.maxHp) * 100, mpW = p.maxMp > 0 ? (p.mp / p.maxMp) * 100 : 0;
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; margin-bottom: 2px;"><strong>${p.name}</strong> <span>Lv${p.level} ${p.job}</span></div>
-                <div style="display:flex; gap:10px;">
-                    <div style="flex:1;"><div class="stat-bar"><div class="stat-fill" style="width:${hpW}%; background:${p.hp <= 0 ? '#444' : '#ff4444'};"></div>
-                    <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:10px; line-height:14px; text-shadow:1px 1px 0 #000; z-index:2;">HP ${p.hp}/${p.maxHp}</div></div></div>
-                    <div style="flex:1;"><div class="stat-bar"><div class="stat-fill" style="width:${mpW}%; background:#4444ff;"></div>
-                    <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:10px; line-height:14px; text-shadow:1px 1px 0 #000; z-index:2;">MP ${p.mp}/${p.maxMp}</div></div></div>
+                <!-- Background Blur -->
+                <div style="position:absolute; top:0; right:-20px; width:80px; height:100%; background:url('${p.portrait}') no-repeat center; background-size:cover; filter: blur(5px) brightness(0.4); opacity:0.4; z-index:1; pointer-events:none;"></div>
+                
+                <div style="position:relative; z-index:2; display:flex; gap:8px; align-items:center;">
+                    <div style="width:36px; height:36px; border:1px solid #555; background:#111; flex-shrink:0;">
+                        <img src="${p.portrait}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                    </div>
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;"><strong>${p.name}</strong> <span style="font-size:10px; color:#aaa;">Lv${p.level} ${p.job}</span></div>
+                        <div style="display:flex; gap:5px;">
+                            <div style="flex:1;"><div class="stat-bar"><div class="stat-fill" style="width:${hpW}%; background:${p.hp <= 0 ? '#444' : '#ff4444'};"></div>
+                            <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:9px; line-height:12px; text-shadow:1px 1px 0 #000; z-index:2;">HP ${p.hp}</div></div></div>
+                            <div style="flex:1;"><div class="stat-bar"><div class="stat-fill" style="width:${mpW}%; background:#4444ff;"></div>
+                            <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:9px; line-height:12px; text-shadow:1px 1px 0 #000; z-index:2;">MP ${p.mp}</div></div></div>
+                        </div>
+                    </div>
                 </div>`;
             list.appendChild(div);
         });
@@ -322,33 +335,45 @@ const UI = {
             const mpPercent = (p.maxMp > 0) ? (p.mp / p.maxMp) * 100 : 0;
 
             html += `
-                <div id="camp-char-${idx}" class="camp-character ${isLowHp ? 'low-hp' : ''}">
-                    <div class="camp-char-stats">
-                        <strong style="color:#ffcc00; font-size:14px;">${p.name}</strong> 
-                        <span style="font-size:12px; color:#aaa;">(${p.job}) Lv: ${p.level} | HP: ${p.hp}/${p.maxHp} | MP: ${p.mp}/${p.maxMp}</span><br>
-                        
-                        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:2px; margin-top:5px; font-size:11px; color:#ddd;">
-                            <div>STR: ${p.str}${getBonus('atk')}</div>
-                            <div>INT: ${p.int}${getBonus('int')}</div>
-                            <div>VIT: ${p.vit}${getBonus('def')}</div>
-                            <div>AGI: ${p.agi}${getBonus('agi')}</div>
-                            <div>LUK: ${p.luk}${getBonus('luk')}</div>
-                            <div>EXP: ${p.exp}/${nextExp}</div>
+                <div id="camp-char-${idx}" class="camp-character ${isLowHp ? 'low-hp' : ''}" style="position:relative; overflow:hidden;">
+                    <!-- Background Blur Portrait -->
+                    <div style="position:absolute; top:0; right:0; width:200px; height:100%; background:url('${p.portrait}') no-repeat center; background-size:cover; filter: blur(10px) brightness(0.3); opacity: 0.5; z-index:1; pointer-events:none; transform: scale(1.1);"></div>
+
+                    <div style="display:flex; gap:15px; position:relative; z-index:2; width:100%;">
+                        <!-- Character Portrait -->
+                        <div style="width:100px; height:120px; border:2px solid #555; background:#222; flex-shrink:0;">
+                            <img src="${p.portrait}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22><rect width=%221%22 height=%221%22 fill=%22%23333%22/></svg>'">
                         </div>
-                        <div style="color:#888; font-size:11px; margin-top:4px;">${p.desc}</div>
-                        <div style="color:#aaf; font-size:11px; margin-top:2px;">[スキル] ${p.skillDesc}</div>
-                        <div style="color:#888; font-size:11px; margin-top:2px;">
-                            EQ: [${p.equipment.weapon?.name || 'なし'}] [${p.equipment.armor?.name || 'なし'}] [${p.equipment.accessory?.name || 'なし'}]
-                        </div>
-                    </div>
-                    <div class="camp-char-actions">
-                        ${game.campMode === 'SELECT_CHARACTER' || game.campMode === 'SELECT_TARGET' ?
+
+                        <div style="flex:1;">
+                            <div class="camp-char-stats">
+                                <strong style="color:#ffcc00; font-size:14px;">${p.name}</strong> 
+                                <span style="font-size:12px; color:#aaa;">(${p.job}) Lv: ${p.level} | HP: ${p.hp}/${p.maxHp} | MP: ${p.mp}/${p.maxMp}</span><br>
+                                
+                                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:2px; margin-top:5px; font-size:11px; color:#ddd;">
+                                    <div>STR: ${p.str}${getBonus('atk')}</div>
+                                    <div>INT: ${p.int}${getBonus('int')}</div>
+                                    <div>VIT: ${p.vit}${getBonus('def')}</div>
+                                    <div>AGI: ${p.agi}${getBonus('agi')}</div>
+                                    <div>LUK: ${p.luk}${getBonus('luk')}</div>
+                                    <div>EXP: ${p.exp}/${nextExp}</div>
+                                </div>
+                                <div style="color:#888; font-size:11px; margin-top:4px;">${p.desc}</div>
+                                <div style="color:#aaf; font-size:11px; margin-top:2px;">[スキル] ${p.skillDesc}</div>
+                                <div style="color:#888; font-size:11px; margin-top:2px;">
+                                    EQ: [${p.equipment.weapon?.name || 'なし'}] [${p.equipment.armor?.name || 'なし'}] [${p.equipment.accessory?.name || 'なし'}]
+                                </div>
+                            </div>
+                            <div class="camp-char-actions" style="margin-top:8px;">
+                                ${game.campMode === 'SELECT_CHARACTER' || game.campMode === 'SELECT_TARGET' ?
                     `<button class="btn" style="padding:4px; border-color:#ffcc00;" onclick="game.executeItemAction(${idx}, ${game.pendingItemIdx}, '${game.campMode === 'SELECT_TARGET' ? 'use' : 'equip'}')">選択</button>` :
                     ` ${['僧侶', 'ビショップ', 'モンク'].indexOf(p.job) !== -1 ? `<button class="btn" style="padding:4px; font-size:10px; margin-bottom:2px;" onclick="game.castCampMagic(${idx})">${p.job === 'モンク' ? '精神統一' : (p.job === 'ビショップ' ? '聖別の儀' : '回復魔法')}(3MP)</button>` : ''}
-                        ${p.equipment.weapon ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="game.unequipItem(${idx}, 'weapon')">武器外す</button>` : ''}
-                        ${p.equipment.armor ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="game.unequipItem(${idx}, 'armor')">鎧外す</button>` : ''}
-                        ${p.equipment.accessory ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="game.unequipItem(${idx}, 'accessory')">装飾外す</button>` : ''}
-                        `}
+                                ${p.equipment.weapon ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="game.unequipItem(${idx}, 'weapon')">武器外す</button>` : ''}
+                                ${p.equipment.armor ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="game.unequipItem(${idx}, 'armor')">鎧外す</button>` : ''}
+                                ${p.equipment.accessory ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="game.unequipItem(${idx}, 'accessory')">装飾外す</button>` : ''}
+                                `}
+                            </div>
+                        </div>
                     </div>
                 </div>`;
         });

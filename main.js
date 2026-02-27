@@ -114,8 +114,10 @@ class Game {
             agi = Math.round(agi * 1.1);
         }
 
+        const portrait = `assets/face_${job.name}_${gender}.jpeg`;
+
         return {
-            name, job: job.name, gender, desc: job.desc, skillDesc: job.skillDesc,
+            name, job: job.name, gender, portrait, desc: job.desc, skillDesc: job.skillDesc,
             hp: job.hp, maxHp: job.hp, mp: job.mp, maxMp: job.mp,
             str, int, vit, agi, luk: job.luk,
             baseStr: str, baseInt: int, baseVit: vit, baseAgi: agi, baseLuk: job.luk,
@@ -170,7 +172,7 @@ class Game {
             const statRow = (stat, label) => {
                 const baseKey = 'base' + stat.charAt(0).toUpperCase() + stat.slice(1);
                 return `
-                    <div style="display:inline-flex; align-items:center; width:90px; margin-bottom:4px;">
+                    <div style="display:inline-flex; align-items:center; width:90px; margin-bottom:4px; position:relative; z-index:2;">
                         <span style="display:inline-block; width:30px; font-size:12px;">${label}</span>
                         <button class="btn" style="padding:0 5px; height:18px; font-size:10px;" ${char[stat] <= char[baseKey] ? 'disabled' : ''} onclick="game.adjustStat(${idx}, '${stat}', -1)">-</button>
                         <span style="display:inline-block; width:20px; text-align:center; font-size:12px;">${char[stat]}</span>
@@ -178,14 +180,24 @@ class Game {
                     </div>`;
             };
             html += `
-                <div style="border: 1px dashed #fff; padding: 5px; background: rgba(0,0,0,0.8);">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
-                        <span><strong style="color:#ffcc00;">${char.name} (${char.job} / ${char.gender === 'male' ? '男' : '女'})</strong></span>
-                        <span style="color:${char.bonusLeft > 0 ? '#5f5' : '#888'}; font-size:12px;">Bonus: ${char.bonusLeft}</span>
+                <div style="border: 1px dashed #fff; padding: 10px; background: rgba(0,0,0,0.8); position:relative; overflow:hidden; min-height:120px; display:flex; gap:15px;">
+                    <!-- Blurred Background Portrait -->
+                    <div style="position:absolute; top:0; right:0; width:150px; height:100%; background:url('${char.portrait}') no-repeat center; background-size:cover; filter: blur(8px) brightness(0.4); opacity: 0.5; z-index:1; pointer-events:none; transform: scale(1.2);"></div>
+                    
+                    <!-- Character Portrait -->
+                    <div style="width:80px; height:80px; border:2px solid #555; background: #222; position:relative; z-index:2; flex-shrink:0;">
+                         <img src="${char.portrait}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22><rect width=%221%22 height=%221%22 fill=%22%23333%22/></svg>'">
                     </div>
-                    <div style="font-size:11px; color:#ccc; margin-bottom:5px;">${char.desc}<br><span style="color:#aaf;">[スキル] ${char.skillDesc}</span></div>
-                    <div style="display:flex; flex-wrap:wrap; gap:2px;">${statRow('str', 'STR')}${statRow('int', 'INT')}${statRow('vit', 'VIT')}${statRow('agi', 'AGI')}${statRow('luk', 'LUK')}</div>
-                    <div style="font-size:12px; color:#aaa; margin-top:2px;">HP: ${char.hp} | MP: ${char.mp}</div>
+
+                    <div style="position:relative; z-index:2; flex:1;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                            <span><strong style="color:#ffcc00;">${char.name}</strong> <span style="font-size:12px; color:#aaa;">(${char.job} / ${char.gender === 'male' ? '男' : '女'})</span></span>
+                            <span style="color:${char.bonusLeft > 0 ? '#5f5' : '#888'}; font-size:12px;">Bonus: ${char.bonusLeft}</span>
+                        </div>
+                        <div style="font-size:11px; color:#ccc; margin-bottom:5px;">${char.desc}<br><span style="color:#aaf;">[スキル] ${char.skillDesc}</span></div>
+                        <div style="display:flex; flex-wrap:wrap; gap:5px;">${statRow('str', 'STR')}${statRow('int', 'INT')}${statRow('vit', 'VIT')}${statRow('agi', 'AGI')}${statRow('luk', 'LUK')}</div>
+                        <div style="font-size:12px; color:#aaa; margin-top:2px;">HP: ${char.hp} | MP: ${char.mp}</div>
+                    </div>
                 </div>`;
         });
         document.getElementById('char-create-list').innerHTML = html;
