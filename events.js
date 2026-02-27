@@ -293,6 +293,7 @@ const Events = {
 
                 game.party.forEach(p => { if (p.hp > 0) p.hp = Math.max(1, Math.floor(p.hp * 0.2)); });
                 UI.addLog("逃走の代償として、パーティ全員が深手を負った！（HP残り20%）");
+                UI.addLog("「あはは......『渦』には逆らえない......誰もね......」");
                 game.closeEvent();
             };
             options.appendChild(btnRun);
@@ -352,7 +353,7 @@ const Events = {
 
     handleEvent8F: function (game, title, desc, options) {
         title.textContent = "闇の賢者";
-        desc.innerHTML = "黒衣に身を包んだ、底知れぬ魔力を放つ老人が佇んでいる。<br><br>「ここまで辿り着くとはな。だが、お前たちの力では最深部の主には勝てまい。」<br>「どうだ。使えぬ者一人の『命の灯火』を私に差し出さぬか？<br>それは、組織としての合理的な判断ではないかね……？」<br><br>※同意した場合、選択したメンバーは<strong>永久にロスト</strong>しますが、引き換えに最強クラスの装備セットを入手します。";
+        desc.innerHTML = "黒衣に身を包んだ、底知れぬ魔力を放つ老人が佇んでいる。<br><br>「ここまで辿り着くとはな。だが、お前たちの力では最深部の主、『渦』には勝てまい。」<br>「どうだ。使えぬ者一人の『命の灯火』を私に差し出さぬか？<br>それは、組織としての合理的な判断ではないかね……？」<br><br>※同意した場合、選択したメンバーは<strong>永久にロスト</strong>しますが、引き換えに最強クラスの装備セットを入手します。";
         const alive = game.party.filter(p => p.hp > 0);
         if (alive.length <= 1) {
             const btn = document.createElement('button');
@@ -403,9 +404,9 @@ const Events = {
     },
 
     handleEvent9F: function (game, title, desc, options) {
-        title.textContent = "9Fでの遭遇";
         if (game.npcFlags.helpedAdventurer) {
-            desc.innerHTML = "見覚えのある冒険者が立っている。<br>彼は５階で助けたあの男だ。<br><br>「あの時は本当にありがとな。おかげでここまで来られた。これはお礼だ、使ってくれ！」";
+            title.textContent = "恩返しの亡霊";
+            desc.innerHTML = "５階で助けたはずの男が、透き通った姿で微笑んでいる。<br>やはり彼は死んでいたのだ。<br><br>「感謝する......君たちの慈悲のおかげで、私は『渦』の呪縛から解き放たれ、最後に正気に戻れた......。これを、持って行ってくれ。君たちなら、奴に届くはずだ......。」";
             const btn = document.createElement('button');
             btn.className = 'btn'; btn.textContent = '受け取る';
             btn.onclick = () => {
@@ -420,7 +421,7 @@ const Events = {
             };
             options.appendChild(btn);
         } else {
-            desc.innerHTML = "通路の先で、冒険者の無惨な死体を発見した。<br>５階で見捨てたあの男のようだ...。<br><br>彼の傍らには、禍々しいオーラを放つ<br>装備品が転がっている。";
+            desc.innerHTML = "通路の先で、冒険者の無惨な死体を発見した。<br>５階で見捨てたあの男のようだ...。<br><br>遺体からは瘴気が溢れ出し、『渦』の意思が直接脳内に響いてくる。<br>「フフフ......慈悲を持たぬ魂こそ、我が贄にふさわしい......」<br><br>彼の傍らには、禍々しいオーラを放つ装備品が転がっている。";
             const btn = document.createElement('button');
             btn.className = 'btn'; btn.textContent = '遺体をあさる';
             btn.onclick = () => {
