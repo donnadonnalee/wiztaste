@@ -378,7 +378,17 @@ class Game {
         const alive = this.party.filter(p => p.hp > 0);
         if (alive.length > 0) {
             totalExp = Math.floor(totalExp / alive.length);
-            this.party.forEach(p => { if (p.hp > 0) { p.exp += totalExp; if (p.exp >= Math.floor(60 * Math.pow(p.level, 2.2))) this.levelUp(p); } });
+            this.party.forEach(p => {
+                if (p.hp > 0) {
+                    p.exp += totalExp;
+                    let nextExp = Math.floor(50 * Math.pow(p.level, 1.7));
+                    while (p.exp >= nextExp) {
+                        p.exp -= nextExp;
+                        this.levelUp(p);
+                        nextExp = Math.floor(50 * Math.pow(p.level, 1.7));
+                    }
+                }
+            });
         }
         UI.addLog(`経験値を ${totalExp} 獲得した！`);
 

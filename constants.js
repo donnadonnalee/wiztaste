@@ -147,7 +147,7 @@ _generatedMonsters.forEach((m, idx) => {
         hp: Math.floor(25 * scale * statsMult.hp),
         atk: Math.floor(8 * scale * statsMult.atk),
         agi: Math.floor((5 + floorRaw * 2.5) * statsMult.agi),
-        exp: Math.floor(15 * scale * statsMult.hp),
+        exp: Math.floor(25 * scale * statsMult.hp),
         imgIndex: m.imgIndex,
         svg: m.svgStr
     });
