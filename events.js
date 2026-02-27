@@ -406,11 +406,11 @@ const Events = {
     handleEvent9F: function (game, title, desc, options) {
         if (game.npcFlags.helpedAdventurer) {
             title.textContent = "恩返しの亡霊";
-            desc.innerHTML = "５階で助けたはずの男が、透き通った姿で微笑んでいる。<br>やはり彼は死んでいたのだ。<br><br>「感謝する......君たちの慈悲のおかげで、私は『渦』の呪縛から解き放たれ、最後に正気に戻れた......。これを、持って行ってくれ。君たちなら、奴に届くはずだ......。」";
+            desc.innerHTML = "５階で助けたはずの男が、透き通った姿で微笑んでいる。<br>彼はこの先で息絶えたのだろう。<br><br>「......君たちなら、奴に届くはずだ......。」";
             const btn = document.createElement('button');
             btn.className = 'btn'; btn.textContent = '受け取る';
             btn.onclick = () => {
-                game.karma += 20; UI.addLog("恩返しとして、伝説の装備セットを受け取った！");
+                game.karma += 20; UI.addLog("伝説の装備セットを受け取った！");
                 game.npcFlags.event9FDone = true;
                 game.inventory.push(
                     { name: "英雄の聖剣", type: "weapon", atk: 50, desc: "伝説の剣" },
@@ -421,7 +421,7 @@ const Events = {
             };
             options.appendChild(btn);
         } else {
-            desc.innerHTML = "通路の先で、冒険者の無惨な死体を発見した。<br>５階で見捨てたあの男のようだ...。<br><br>遺体からは瘴気が溢れ出し、『渦』の意思が直接脳内に響いてくる。<br>「フフフ......慈悲を持たぬ魂こそ、我が贄にふさわしい......」<br><br>彼の傍らには、禍々しいオーラを放つ装備品が転がっている。";
+            desc.innerHTML = "通路の先で、冒険者の無惨な死体を発見した。<br>５階で見捨てたあの男のようだ...。<br><br>遺体からは瘴気が溢れ出している。<br><br>そして、傍らには、禍々しいオーラを放つ装備品が転がっている。";
             const btn = document.createElement('button');
             btn.className = 'btn'; btn.textContent = '遺体をあさる';
             btn.onclick = () => {

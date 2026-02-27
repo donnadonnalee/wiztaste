@@ -92,24 +92,28 @@ const ITEM_PREFIXES = [
 const MONSTER_NAMES = [
     'スライム', 'バット', 'スパイダー', 'スネーク', 'ゴブリン',
     'スケルトン', 'ファントム', 'オーガ', 'デーモン', 'ドラゴン',
-    'ゾンビ', 'メイジ', 'ヴァンパイア', 'デーモンメイジ'
+    'ゾンビ', 'メイジ', 'ヴァンパイア', 'デビル', 'ダイナソー', 'イーター', 'ディアブロ', 'リッチ'
 ];
 
 const MONSTER_STATS_MULT = [
-    { hp: 1.2, atk: 0.8, agi: 0.5 },
-    { hp: 0.6, atk: 0.8, agi: 1.5 },
-    { hp: 0.8, atk: 1.0, agi: 1.2 },
-    { hp: 0.7, atk: 1.2, agi: 1.3 },
-    { hp: 1.0, atk: 1.0, agi: 1.0 },
-    { hp: 0.8, atk: 1.2, agi: 0.8 },
-    { hp: 0.5, atk: 1.5, agi: 1.8 },
-    { hp: 2.8, atk: 1.5, agi: 0.6 },
-    { hp: 2.0, atk: 1.8, agi: 1.2 },
-    { hp: 2.5, atk: 2.5, agi: 1.0 },
-    { hp: 3.5, atk: 1.1, agi: 0.4 },
-    { hp: 0.7, atk: 3.5, agi: 0.9 },
-    { hp: 1.3, atk: 1.4, agi: 1.5 },
-    { hp: 1.2, atk: 5.0, agi: 1.1 }
+    { hp: 1.2, atk: 0.8, agi: 0.5 }, /* スライム */
+    { hp: 0.6, atk: 0.8, agi: 1.5 }, /* バット */
+    { hp: 0.8, atk: 1.0, agi: 1.2 }, /* スパイダー */
+    { hp: 0.7, atk: 1.2, agi: 1.3 }, /* スネーク */
+    { hp: 1.0, atk: 1.0, agi: 1.0 }, /* ゴブリン */
+    { hp: 0.8, atk: 1.2, agi: 0.8 }, /* スケルトン */
+    { hp: 0.5, atk: 1.5, agi: 1.8 }, /* ファントム */
+    { hp: 2.8, atk: 1.5, agi: 0.6 }, /* オーガ */
+    { hp: 2.0, atk: 1.8, agi: 1.2 }, /* デーモン */
+    { hp: 2.5, atk: 2.5, agi: 1.0 }, /* ドラゴン */
+    { hp: 3.5, atk: 1.1, agi: 0.4 }, /* ゾンビ */
+    { hp: 0.7, atk: 3.5, agi: 0.9 }, /* メイジ */
+    { hp: 1.3, atk: 1.4, agi: 1.5 }, /* ヴァンパイア */
+    { hp: 1.2, atk: 5.0, agi: 1.1 }, /* デビル */
+    { hp: 2.7, atk: 2.5, agi: 0.5 }, /* ダイナソー */
+    { hp: 0.3, atk: 1.4, agi: 0.5 }, /* イーター */
+    { hp: 3.2, atk: 2.0, agi: 1.6 },  /* ディアブロ */
+    { hp: 4.2, atk: 1.0, agi: 2.6 },  /* リッチ */
 ];
 
 const ENEMY_VARIANTS = [
@@ -162,13 +166,17 @@ const ENEMY_SKILLS = {
     5: { name: '骨投げ', chance: 0.4, type: 'attack', desc: '自身の骨を投げつけてきた！', mult: 1.8 },
     6: { name: 'エナジードレイン', chance: 0.4, type: 'drain', desc: '生命力を吸い取られた！', mult: 1.5 },
     7: { name: '痛恨の一撃', chance: 0.3, type: 'attack', desc: '渾身の一撃が叩き込まれた！', mult: 2.5 },
-    8: { name: '暗黒の炎', chance: 0.3, type: 'aoe', desc: '禍々しい炎が周囲を焼き尽くす！', mult: 1.2 },
-    9: { name: '炎', chance: 0.4, type: 'aoe', desc: '灼熱の炎を吐き出した！', mult: 1.5 },
+    8: { name: '暗黒の炎', chance: 0.3, type: 'aoe', desc: '禍々しい炎が周囲を焼き尽くす！', mult: 0.7 },
+    9: { name: '炎', chance: 0.4, type: 'aoe', desc: '灼熱の炎を吐き出した！', mult: 0.6 },
     10: { name: '腐食液', chance: 0.4, type: 'pierce', desc: '腐食性の液体を浴びせかけてきた！', mult: 1.5 },
     11: { name: 'ファイヤーボール', chance: 0.5, type: 'attack', desc: '巨大な火球を放った！', mult: 2.0 },
     12: { name: '吸血', chance: 0.4, type: 'drain', desc: '闇の中から牙を突き立てた！', mult: 1.4 },
-    13: { name: 'メテオ', chance: 0.3, type: 'aoe', desc: '宇宙から隕石が降り注ぐ！', mult: 2.0 },
-    'boss': { name: '絶望の波動', chance: 0.25, type: 'aoe', desc: '周囲の空気が重く震える...', mult: 2.5 }
+    13: { name: 'メテオ', chance: 0.2, type: 'aoe', desc: '宇宙から隕石が降り注ぐ！', mult: 2.0 },
+    14: { name: '暴走', chance: 0.5, type: 'attack', desc: '激しく暴れ狂った！', mult: 2.5 },
+    15: { name: '呪い', chance: 0.2, type: 'drain', desc: '呪いを放った！', mult: 1.4 },
+    16: { name: '痛恨の一撃', chance: 0.2, type: 'attack', desc: '渾身の一撃が叩き込まれた！', mult: 2.5 },
+    17: { name: '宣告', chance: 0.1, type: 'attack', desc: '死を宣告した！', mult: 3.4 },
+    'boss': { name: '絶望の波動', chance: 0.1, type: 'aoe', desc: '周囲の空気が重く震える...', mult: 2.0 }
 };
 
 function generateMaze(size, depth = 0) {
