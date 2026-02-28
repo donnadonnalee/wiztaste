@@ -58,7 +58,7 @@ const Events = {
 
     handleEvent2F: function (game, title, desc, options) {
         title.textContent = "老師";
-        const allHighLevel = game.party.every(p => p.level >= 30);
+        const allHighLevel = game.party.every(p => p.level >= 10);
         if (allHighLevel) {
             desc.innerHTML = "静かに目を閉じた老人が、おもむろに口を開いた。<br><br>「汝、さらなる高みへ導こう。心して励むが良い。」<br><br>※現在のステータスがベースステータスとして固定されます。<br>これにより、強力な武器や防具の装備条件をクリアしやすくなります。";
             const btn = document.createElement('button');
@@ -70,7 +70,7 @@ const Events = {
             };
             options.appendChild(btn);
         } else {
-            desc.innerHTML = "静かに目を閉じた老人が、おもむろに口を開いた。<br><br>「汝、本当の絶望を知らぬようだ。」<br><br>※修行を受けるには全員がレベル30以上である必要があります。";
+            desc.innerHTML = "静かに目を閉じた老人が、おもむろに口を開いた。<br><br>「汝、本当の絶望を知らぬようだ。」<br><br>※修行を受けるには全員がレベル10以上である必要があります。";
             const btn = document.createElement('button');
             btn.className = 'btn'; btn.textContent = '立ち去る';
             btn.onclick = () => game.closeEvent();
