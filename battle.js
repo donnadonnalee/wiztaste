@@ -34,8 +34,7 @@ const Battle = {
                 let monster = aliveMonsters[targetIdx];
                 if (action.type === 'attack') {
                     audio.playSE('se_attack');
-                    const wpnAtk = (action.actor.equipment.weapon?.atk || 0) + (action.actor.equipment.accessory?.atk || 0);
-                    const dmg = Math.max(1, (action.actor.str + wpnAtk) + Math.floor(Math.random() * 5) - 2);
+                    const dmg = Math.max(1, game.getEffectiveStat(action.actor, 'str') + Math.floor(Math.random() * 5) - 2);
                     monster.currentHp -= dmg;
                     UI.addLog(`${action.actor.name}の攻撃！ ${monster.name}に${dmg}のダメージ！`);
                     UI.showHitEffect(monster.id, dmg);
@@ -93,8 +92,7 @@ const Battle = {
                 audio.playSE('se_heavy_attack');
                 UI.flashScreen('rgba(255,0,0,0.5)');
                 const mult = (actor.skillMultiplier || 1.0);
-                const wpnAtk = (actor.equipment.weapon?.atk || 0) + (actor.equipment.accessory?.atk || 0);
-                const dmg = Math.floor(((actor.str + wpnAtk) + Math.random() * 5) * 1.5 * mult);
+                const dmg = Math.floor(game.getEffectiveStat(actor, 'str') * 1.5 * mult + Math.random() * 5);
                 monster.currentHp -= dmg;
                 UI.addLog(`${actor.name}の全力斬り！(HP-5) ${monster.name}に${dmg}の大ダメージ！`);
                 UI.showHitEffect(monster.id, dmg);
@@ -105,7 +103,7 @@ const Battle = {
                 audio.playSE('se_attack');
                 UI.flashScreen('rgba(255,255,255,0.4)');
                 const mult = (actor.skillMultiplier || 1.0);
-                const dmg = Math.floor((actor.str * 1.5 + actor.agi * 0.5) * mult);
+                const dmg = Math.floor((game.getEffectiveStat(actor, 'str') * 1.5 + game.getEffectiveStat(actor, 'agi') * 0.5) * mult);
                 monster.currentHp -= dmg;
                 UI.addLog(`${actor.name}の気功波！(HP-4) ${monster.name}に防御無視の${dmg}ダメージ！`);
                 UI.showHitEffect(monster.id, dmg);
@@ -116,7 +114,7 @@ const Battle = {
                 audio.playSE('se_attack');
                 UI.flashScreen('rgba(150,0,255,0.4)');
                 const mult = (actor.skillMultiplier || 1.0);
-                const dmg = Math.floor((actor.agi * 1.8 + Math.random() * 5) * mult);
+                const dmg = Math.floor((game.getEffectiveStat(actor, 'agi') * 1.8 + Math.random() * 5) * mult);
                 monster.currentHp -= dmg;
                 UI.addLog(`${actor.name}の不意打ち！(MP-3) ${monster.name}に${dmg}のダメージ！`);
                 UI.showHitEffect(monster.id, dmg);
@@ -127,11 +125,11 @@ const Battle = {
                 audio.playSE('se_heal');
                 UI.flashScreen('rgba(200,255,200,0.5)');
                 let target = actor;
-                let minHpPct = target.hp / target.maxHp;
-                game.party.forEach(p => { if (p.hp > 0 && (p.hp / p.maxHp) < minHpPct) { target = p; minHpPct = p.hp / p.maxHp; } });
+                let minHpPct = target.hp / game.getEffectiveMaxHp(target);
+                game.party.forEach(p => { if (p.hp > 0 && (p.hp / game.getEffectiveMaxHp(p)) < minHpPct) { target = p; minHpPct = p.hp / game.getEffectiveMaxHp(p); } });
                 const mult = (actor.skillMultiplier || 1.0);
-                const heal = Math.max(15, Math.floor((actor.int + 10) * mult));
-                target.hp = Math.min(target.maxHp, target.hp + heal);
+                const heal = Math.max(15, Math.floor((game.getEffectiveStat(actor, 'int') + 10) * mult));
+                target.hp = Math.min(game.getEffectiveMaxHp(target), target.hp + heal);
                 UI.addLog(`${actor.name}のヒール！(MP-4) ${target.name}のHPが${heal}回復！`);
                 UI.showHealEffect(game.party.indexOf(target), heal);
             } else UI.addLog(`${actor.name}はMPが足りない！`);
@@ -143,7 +141,7 @@ const Battle = {
                 UI.addLog(`${actor.name}のファイヤーボール！(MP-5) 全体に炎が襲う！`);
                 const mult = (actor.skillMultiplier || 1.0);
                 aliveMonsters.forEach(m => {
-                    const dmg = Math.max(10, Math.floor((actor.int * 1.5 + 5) * mult));
+                    const dmg = Math.max(10, Math.floor((game.getEffectiveStat(actor, 'int') * 1.5 + 5) * mult));
                     m.currentHp -= dmg;
                     UI.addLog(`${m.name}に${dmg}のダメージ！`);
                     UI.showHitEffect(m.id, dmg);
@@ -155,9 +153,9 @@ const Battle = {
                 audio.playSE('se_heavy_attack');
                 UI.flashScreen('rgba(255,255,255,0.5)');
                 const mult = (actor.skillMultiplier || 1.0);
-                const wpnAtk = (actor.equipment.weapon?.atk || 0) + (actor.equipment.accessory?.atk || 0);
-                const dmg1 = Math.floor(((actor.str + wpnAtk) * 0.8 + Math.random() * 3) * mult);
-                const dmg2 = Math.floor(((actor.str + wpnAtk) * 0.8 + Math.random() * 3) * mult);
+                const effStr = game.getEffectiveStat(actor, 'str');
+                const dmg1 = Math.floor((effStr * 0.8 + Math.random() * 3) * mult);
+                const dmg2 = Math.floor((effStr * 0.8 + Math.random() * 3) * mult);
                 monster.currentHp -= (dmg1 + dmg2);
                 UI.addLog(`${actor.name}の燕返し！(MP-4) ${monster.name}に${dmg1}と${dmg2}の連続ダメージ！`);
                 UI.showHitEffect(monster.id, dmg1 + dmg2);
@@ -168,7 +166,7 @@ const Battle = {
                 audio.playSE('se_arrow');
                 UI.flashScreen('rgba(255,255,255,0.4)');
                 const mult = (actor.skillMultiplier || 1.0);
-                const dmg = Math.floor((actor.str + actor.agi * 1.2) * mult);
+                const dmg = Math.floor((game.getEffectiveStat(actor, 'str') + game.getEffectiveStat(actor, 'agi') * 1.2) * mult);
                 monster.currentHp -= dmg;
                 UI.addLog(`${actor.name}の狙い撃ち！(MP-3) 急所を突いて${monster.name}に${dmg}のダメージ！`);
                 UI.showHitEffect(monster.id, dmg);
@@ -179,15 +177,14 @@ const Battle = {
                 audio.playSE('se_heal');
                 UI.flashScreen('rgba(200,255,200,0.4)');
                 let target = actor;
-                let minHpPct = target.hp / target.maxHp;
-                game.party.forEach(p => { if (p.hp > 0 && (p.hp / p.maxHp) < minHpPct) { target = p; minHpPct = p.hp / p.maxHp; } });
+                let minHpPct = target.hp / game.getEffectiveMaxHp(target);
+                game.party.forEach(p => { if (p.hp > 0 && (p.hp / game.getEffectiveMaxHp(p)) < minHpPct) { target = p; minHpPct = p.hp / game.getEffectiveMaxHp(p); } });
                 const mult = (actor.skillMultiplier || 1.0);
-                const heal = Math.max(8, Math.floor((actor.int * 0.5 + 5) * mult));
-                target.hp = Math.min(target.maxHp, target.hp + heal);
+                const heal = Math.max(8, Math.floor((game.getEffectiveStat(actor, 'int') * 0.5 + 5) * mult));
+                target.hp = Math.min(game.getEffectiveMaxHp(target), target.hp + heal);
                 UI.addLog(`${actor.name}の精神統一！(MP-4) ${target.name}のHPが${heal}回復！`);
                 UI.showHealEffect(game.party.indexOf(target), heal);
-                const wpnAtk = (actor.equipment.weapon?.atk || 0) + (actor.equipment.accessory?.atk || 0);
-                const dmg = Math.max(1, (actor.str + wpnAtk) + Math.floor(Math.random() * 3));
+                const dmg = Math.max(1, game.getEffectiveStat(actor, 'str') + Math.floor(Math.random() * 3));
                 monster.currentHp -= dmg;
                 UI.addLog(`${actor.name}の追撃！ ${monster.name}に${dmg}のダメージ！`);
                 UI.showHitEffect(monster.id, dmg);
@@ -198,15 +195,16 @@ const Battle = {
                 audio.playSE('se_magic');
                 UI.flashScreen('rgba(255,255,255,0.7)');
                 let target = actor;
-                let minHpPct = target.hp / target.maxHp;
-                game.party.forEach(p => { if (p.hp > 0 && (p.hp / p.maxHp) < minHpPct) { target = p; minHpPct = p.hp / p.maxHp; } });
+                let minHpPct = target.hp / game.getEffectiveMaxHp(target);
+                game.party.forEach(p => { if (p.hp > 0 && (p.hp / game.getEffectiveMaxHp(p)) < minHpPct) { target = p; minHpPct = p.hp / game.getEffectiveMaxHp(p); } });
                 const mult = (actor.skillMultiplier || 1.0);
-                const heal = Math.max(15, Math.floor((actor.int + 10) * mult));
-                target.hp = Math.min(target.maxHp, target.hp + heal);
+                const effInt = game.getEffectiveStat(actor, 'int');
+                const heal = Math.max(15, Math.floor((effInt + 10) * mult));
+                target.hp = Math.min(game.getEffectiveMaxHp(target), target.hp + heal);
                 UI.addLog(`${actor.name}のホーリーライト！(MP-8) ${target.name}のHPが${heal}回復！`);
                 UI.showHealEffect(game.party.indexOf(target), heal);
                 aliveMonsters.forEach(m => {
-                    const dmg = Math.max(12, Math.floor((actor.int * 1.8 + 10) * mult));
+                    const dmg = Math.max(12, Math.floor((effInt * 1.8 + 10) * mult));
                     m.currentHp -= dmg;
                     UI.addLog(`${m.name}に${dmg}のダメージ！`);
                     UI.showHitEffect(m.id, dmg);
@@ -225,8 +223,7 @@ const Battle = {
             const target = aliveParty[Math.floor(Math.random() * aliveParty.length)];
             const pIdx = game.party.indexOf(target);
             if (skill.type === 'attack') {
-                const armDef = (target.equipment.armor?.def || 0) + (target.equipment.accessory?.def || 0);
-                const dmg = Math.max(1, Math.floor((actor.atk * skill.mult) - (target.vit + armDef) / 2) + Math.floor(Math.random() * 3));
+                const dmg = Math.max(1, Math.floor((actor.atk * skill.mult) - game.getEffectiveStat(target, 'vit') / 2) + Math.floor(Math.random() * 3));
                 target.hp = Math.max(0, target.hp - dmg);
                 UI.addLog(`${target.name}は${dmg}のダメージ！`);
                 UI.showPartyHitEffect(pIdx, dmg);
@@ -241,16 +238,14 @@ const Battle = {
                 audio.playSE('se_magic');
                 game.party.forEach((p, idx) => {
                     if (p.hp > 0) {
-                        const armDef = (p.equipment.armor?.def || 0) + (p.equipment.accessory?.def || 0);
-                        const dmg = Math.max(1, Math.floor((actor.atk * skill.mult) - (p.vit + armDef) / 2) + Math.floor(Math.random() * 3));
+                        const dmg = Math.max(1, Math.floor((actor.atk * skill.mult) - game.getEffectiveStat(p, 'vit') / 2) + Math.floor(Math.random() * 3));
                         p.hp = Math.max(0, p.hp - dmg);
                         UI.addLog(`${p.name}に${dmg}のダメージ！`);
                         UI.showPartyHitEffect(idx, dmg);
                     }
                 });
             } else if (skill.type === 'drain') {
-                const armDef = (target.equipment.armor?.def || 0) + (target.equipment.accessory?.def || 0);
-                const dmg = Math.max(1, Math.floor((actor.atk * skill.mult) - (target.vit + armDef) / 2) + Math.floor(Math.random() * 3));
+                const dmg = Math.max(1, Math.floor((actor.atk * skill.mult) - game.getEffectiveStat(target, 'vit') / 2) + Math.floor(Math.random() * 3));
                 target.hp = Math.max(0, target.hp - dmg);
                 const heal = Math.floor(dmg * 0.5);
                 actor.currentHp = Math.min(actor.hp, actor.currentHp + heal);
@@ -263,8 +258,7 @@ const Battle = {
         } else {
             const target = aliveParty[Math.floor(Math.random() * aliveParty.length)];
             const pIdx = game.party.indexOf(target);
-            const armDef = (target.equipment.armor?.def || 0) + (target.equipment.accessory?.def || 0);
-            const dmg = Math.max(1, actor.atk - Math.floor((target.vit + armDef) / 2) + Math.floor(Math.random() * 3));
+            const dmg = Math.max(1, actor.atk - Math.floor(game.getEffectiveStat(target, 'vit') / 2) + Math.floor(Math.random() * 3));
             target.hp = Math.max(0, target.hp - dmg);
             UI.addLog(`${actor.name}の攻撃！ ${target.name}は${dmg}のダメージ！`);
             UI.showPartyHitEffect(pIdx, dmg);

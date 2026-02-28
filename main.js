@@ -681,6 +681,46 @@ class Game {
         this.updateUI();
     }
 
+    getEffectiveMaxHp(p) {
+        let val = p.maxHp || 0;
+        ['weapon', 'armor', 'accessory'].forEach(s => {
+            if (p.equipment && p.equipment[s] && p.equipment[s].hp !== undefined) val += p.equipment[s].hp;
+        });
+        return val;
+    }
+
+    getEffectiveMaxMp(p) {
+        let val = p.maxMp || 0;
+        ['weapon', 'armor', 'accessory'].forEach(s => {
+            if (p.equipment && p.equipment[s] && p.equipment[s].mp !== undefined) val += p.equipment[s].mp;
+        });
+        return val;
+    }
+
+    getEffectiveStat(p, stat) {
+        let val = p[stat] || 0;
+        ['weapon', 'armor', 'accessory'].forEach(s => {
+            if (p.equipment && p.equipment[s] && p.equipment[s][stat] !== undefined) val += p.equipment[s][stat];
+        });
+        // Alias for gear with 'atk', 'def', 'intBonus' etc mapping to base stats if needed
+        if (stat === 'str') {
+            ['weapon', 'armor', 'accessory'].forEach(s => {
+                if (p.equipment[s] && p.equipment[s].atk !== undefined) val += p.equipment[s].atk;
+            });
+        }
+        if (stat === 'vit') {
+            ['weapon', 'armor', 'accessory'].forEach(s => {
+                if (p.equipment[s] && p.equipment[s].def !== undefined) val += p.equipment[s].def;
+            });
+        }
+        if (stat === 'int') {
+            ['weapon', 'armor', 'accessory'].forEach(s => {
+                if (p.equipment[s] && p.equipment[s].intBonus !== undefined) val += p.equipment[s].intBonus;
+            });
+        }
+        return val;
+    }
+
     useItem(charIdx, itemIdx) {
         const item = this.inventory[itemIdx];
         if (charIdx === null || item.targetAll) {
@@ -716,15 +756,42 @@ class Game {
 
     equipItem(charIdx, itemIdx) {
         const item = this.inventory[itemIdx], target = this.party[charIdx], type = item.type;
+        const oldMaxHp = this.getEffectiveMaxHp(target);
+        const oldMaxMp = this.getEffectiveMaxMp(target);
+
         if (target.equipment[type]) this.inventory.push(target.equipment[type]);
         target.equipment[type] = item; this.inventory.splice(itemIdx, 1);
+
+        const newMaxHp = this.getEffectiveMaxHp(target);
+        const newMaxMp = this.getEffectiveMaxMp(target);
+
+        // Adjust current HP/MP if max changed
+        if (newMaxHp > oldMaxHp) target.hp += (newMaxHp - oldMaxHp);
+        if (newMaxMp > oldMaxMp) target.mp += (newMaxMp - oldMaxMp);
+        target.hp = Math.min(newMaxHp, target.hp);
+        target.mp = Math.min(newMaxMp, target.mp);
+
         UI.addLog(`${target.name}は${item.name}を装備した。`);
         this.campMode = null; this.updateUI();
     }
 
     unequipItem(idx, slot) {
         const target = this.party[idx];
-        if (target.equipment[slot]) { this.inventory.push(target.equipment[slot]); target.equipment[slot] = null; this.updateUI(); }
+        if (target.equipment[slot]) {
+            const oldMaxHp = this.getEffectiveMaxHp(target);
+            const oldMaxMp = this.getEffectiveMaxMp(target);
+
+            this.inventory.push(target.equipment[slot]);
+            target.equipment[slot] = null;
+
+            const newMaxHp = this.getEffectiveMaxHp(target);
+            const newMaxMp = this.getEffectiveMaxMp(target);
+
+            target.hp = Math.min(newMaxHp, target.hp);
+            target.mp = Math.min(newMaxMp, target.mp);
+
+            this.updateUI();
+        }
     }
 
     showTargetSelection(idx, action) {

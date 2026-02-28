@@ -220,13 +220,13 @@ const UI = {
                     <div style="display:flex; gap:5px;">
                         <div style="flex:1;">
                             <div class="stat-bar">
-                                <div class="stat-fill" style="width:${hpW}%; background:${p.hp <= 0 ? '#444' : '#ff4444'};"></div>
+                                <div class="stat-fill" style="width:${(p.hp / game.getEffectiveMaxHp(p)) * 100}%; background:${p.hp <= 0 ? '#444' : '#ff4444'};"></div>
                                 <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:9px; line-height:12px; text-shadow:1px 1px 0 #000; z-index:2;">HP ${p.hp}</div>
                             </div>
                         </div>
                         <div style="flex:1;">
                             <div class="stat-bar">
-                                <div class="stat-fill" style="width:${mpW}%; background:#4444ff;"></div>
+                                <div class="stat-fill" style="width:${game.getEffectiveMaxMp(p) > 0 ? (p.mp / game.getEffectiveMaxMp(p)) * 100 : 0}%; background:#4444ff;"></div>
                                 <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:9px; line-height:12px; text-shadow:1px 1px 0 #000; z-index:2;">MP ${p.mp}</div>
                             </div>
                         </div>
@@ -335,8 +335,9 @@ const UI = {
             const isGhost = p.isGhost === true;
 
             const getBonus = (stat) => {
-                let bonus = 0;
-                ['weapon', 'armor', 'accessory'].forEach(s => { if (p.equipment[s] && p.equipment[s][stat] !== undefined) bonus += p.equipment[s][stat]; });
+                const effective = game.getEffectiveStat(p, stat);
+                const base = p[stat] || 0;
+                const bonus = effective - base;
                 return bonus !== 0 ? ` <span style="color:${bonus > 0 ? '#5f5' : '#f55'}">(${bonus > 0 ? '+' : ''}${bonus})</span>` : '';
             };
 
@@ -351,7 +352,7 @@ const UI = {
                         <div style="flex:1;">
                             <div class="camp-char-stats">
                                 <strong style="color:${isGhost ? '#00ffff' : '#ffcc00'}; font-size:14px;">${p.name}${isGhost ? ' (亡霊)' : ''}</strong> 
-                                ${isGhost ? '' : `<span style="font-size:12px; color:#aaa;">(${p.job}) Lv: ${p.level} | HP: ${p.hp}/${p.maxHp} | MP: ${p.mp}/${p.maxMp}</span>`}<br>
+                                ${isGhost ? '' : `<span style="font-size:12px; color:#aaa;">(${p.job}) Lv: ${p.level} | HP: ${p.hp}/${game.getEffectiveMaxHp(p)} | MP: ${p.mp}/${game.getEffectiveMaxMp(p)}</span>`}<br>
                                 
                                 <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:2px; margin-top:5px; font-size:11px; color:#ddd;">
                                     <div>STR: ${p.str}${getBonus('atk')}</div>
