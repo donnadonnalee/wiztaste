@@ -612,7 +612,7 @@ class Game {
 
 
     handleEnding() {
-        this.clearTime = Date.now() - (this.startTime || Date.now());
+        this.clearTime = this.elapsedTimeAtSave + (Date.now() - (this.startTime || Date.now()));
         this.state = 'ENDING';
         audio.playBGM('bgm_ending');
         UI.showBlackout(this, "『渦』の波動が消失した...", 4000, () => {
