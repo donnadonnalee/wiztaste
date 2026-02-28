@@ -207,20 +207,24 @@ const UI = {
 
             const hpW = (p.hp / p.maxHp) * 100, mpW = p.maxMp > 0 ? (p.mp / p.maxMp) * 100 : 0;
             div.innerHTML = `
-                <!-- Background Blur -->
-                <div style="position:absolute; top:0; right:-20px; width:80px; height:100%; background:url('${p.portrait}') no-repeat center; background-size:cover; filter: blur(5px) brightness(0.4); opacity:0.4; z-index:1; pointer-events:none;"></div>
-                
-                <div style="position:relative; z-index:2; display:flex; gap:8px; align-items:center;">
-                    <div style="width:36px; height:36px; border:1px solid #555; background:#111; flex-shrink:0;">
-                        <img src="${p.portrait}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'">
+                <div class="card-portrait-bg" style="background-image: url('${p.portrait}')"></div>
+                <div class="card-content">
+                    <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
+                        <strong>${p.name}</strong> 
+                        <span style="font-size:10px; color:#aaa;">Lv${p.level} ${p.job}</span>
                     </div>
-                    <div style="flex:1;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom: 2px;"><strong>${p.name}</strong> <span style="font-size:10px; color:#aaa;">Lv${p.level} ${p.job}</span></div>
-                        <div style="display:flex; gap:5px;">
-                            <div style="flex:1;"><div class="stat-bar"><div class="stat-fill" style="width:${hpW}%; background:${p.hp <= 0 ? '#444' : '#ff4444'};"></div>
-                            <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:9px; line-height:12px; text-shadow:1px 1px 0 #000; z-index:2;">HP ${p.hp}</div></div></div>
-                            <div style="flex:1;"><div class="stat-bar"><div class="stat-fill" style="width:${mpW}%; background:#4444ff;"></div>
-                            <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:9px; line-height:12px; text-shadow:1px 1px 0 #000; z-index:2;">MP ${p.mp}</div></div></div>
+                    <div style="display:flex; gap:5px;">
+                        <div style="flex:1;">
+                            <div class="stat-bar">
+                                <div class="stat-fill" style="width:${hpW}%; background:${p.hp <= 0 ? '#444' : '#ff4444'};"></div>
+                                <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:9px; line-height:12px; text-shadow:1px 1px 0 #000; z-index:2;">HP ${p.hp}</div>
+                            </div>
+                        </div>
+                        <div style="flex:1;">
+                            <div class="stat-bar">
+                                <div class="stat-fill" style="width:${mpW}%; background:#4444ff;"></div>
+                                <div style="position:absolute; top:0; left:0; width:100%; text-align:center; font-size:9px; line-height:12px; text-shadow:1px 1px 0 #000; z-index:2;">MP ${p.mp}</div>
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -336,9 +340,7 @@ const UI = {
 
             html += `
                 <div id="camp-char-${idx}" class="camp-character ${isLowHp ? 'low-hp' : ''}" style="position:relative; overflow:hidden;">
-                    <!-- Background Blur Portrait -->
-                    <div style="position:absolute; top:0; right:0; width:200px; height:100%; background:url('${p.portrait}') no-repeat center; background-size:cover; filter: blur(10px) brightness(0.3); opacity: 0.5; z-index:1; pointer-events:none; transform: scale(1.1);"></div>
-
+                    <!-- Original Layout Restored -->
                     <div style="display:flex; gap:15px; position:relative; z-index:2; width:100%;">
                         <!-- Character Portrait -->
                         <div style="width:100px; height:120px; border:2px solid #555; background:#222; flex-shrink:0;">

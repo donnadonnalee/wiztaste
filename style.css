@@ -176,10 +176,29 @@ canvas#view-canvas {
 
 .party-member {
     border: 1px solid var(--border-color);
-    padding: 5px;
+    padding: 10px;
     font-size: 14px;
     position: relative;
-    /* For damage popups */
+    overflow: hidden;
+    background: rgba(10, 10, 10, 0.9);
+}
+
+.card-portrait-bg {
+    position: absolute;
+    top: 0;
+    left: 20%;
+    width: 60%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0.25;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.card-content {
+    position: relative;
+    z-index: 2;
 }
 
 .party-member.active {
