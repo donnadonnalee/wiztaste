@@ -397,23 +397,41 @@ canvas#view-canvas {
 
     #status-area {
         flex-direction: row;
-        flex-wrap: wrap;
         justify-content: space-between;
-        align-items: flex-start;
-        overflow-y: auto;
+        align-items: stretch;
+        overflow: hidden;
+        height: 180px;
+        /* Adjust height based on character card content */
+        background: rgba(10, 10, 10, 0.95);
     }
 
     #party-list {
-        flex: 1 1 50%;
+        flex: 0 0 220px;
+        /* Keep compact and non-stretched */
         margin-right: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 0px;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
     #minimap-container {
-        display: block;
-        width: 120px;
-        flex-shrink: 0;
-        margin-top: 0;
+        flex: 1;
+        /* Expand horizontally to fill remaining space */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #000;
+        border: 1px solid var(--text-color);
+        min-width: 0;
+    }
+
+    #minimap-canvas {
+        width: auto !important;
+        height: 100% !important;
+        /* Scale vertically to fill container height */
+        max-width: 100%;
+        aspect-ratio: 1;
+        border: none;
     }
 
     #explore-menu:not([style*="display: none"]) {
