@@ -494,8 +494,38 @@ class Game {
         }
         UI.addLog(`経験値を ${totalExp} 獲得した！`);
 
-        if (bt.isSwordsmanEvent) this.inventory.push({ name: "深淵のロングソード", type: "weapon", atk: 55, req: { str: 40 }, desc: "瘴気を帯びた伝説の剣(ATK+55)" });
-        if (bt.isGoblinEvent) this.inventory.push({ name: "キングの冠", type: "accessory", luk: 30, desc: "王の威厳(LUK+30)" });
+        if (bt.isArtoriusLoot) {
+            UI.addLog("アルトリウスの装備品一式を手に入れた！");
+            this.inventory.push(
+                { name: "氷の魔剣", type: "weapon", atk: 18, desc: "冷気を帯びた魔剣(ATK+18)" },
+                { name: "スケイルメイル", type: "armor", def: 11, req: { str: 18 }, desc: "精巧な鱗の鎧(DEF+11)" },
+                { name: "守りの指輪", type: "accessory", def: 3, desc: "防御力を高める指輪(DEF+3)" }
+            );
+        }
+        if (bt.isSmallGoblinLoot) {
+            UI.addLog("スモールゴブリンの「ゴブリンの眼」を手に入れた！");
+            this.inventory.push({ name: "ゴブリンの眼", type: "consumable", hpRestore: 20, desc: "魔物の眼。微量ながらHPを回復する(HP+20)" });
+        }
+        if (bt.isAdventurerLoot) {
+            UI.addLog("負傷した騎士の装備品一式を奪い取った！");
+            this.inventory.push(
+                { name: "バトルアックス", type: "weapon", atk: 15, req: { str: 15 }, desc: "重い斧(ATK+15)" },
+                { name: "プレートメイル", type: "armor", def: 15, req: { str: 20 }, desc: "重装甲(DEF+15)" },
+                { name: "守りの指輪", type: "accessory", def: 3, desc: "防御力を高める指輪(DEF+3)" }
+            );
+        }
+        if (bt.isKingGoblinLoot) {
+            UI.addLog("キングゴブリンの「ゴブリンの鉈」を手に入れた！");
+            this.inventory.push({ name: "ゴブリンの鉈", type: "weapon", atk: 30, req: { str: 20 }, desc: "業物だがひどく血生臭い鉈(ATK+30)" });
+        }
+        if (bt.isSwordsmanEvent) {
+            UI.addLog("狂乱の剣士から「狂人装備一式」を剥ぎ取った！");
+            this.inventory.push(
+                { name: "狂戦士の剣", type: "weapon", atk: 45, desc: "狂気に染まった大剣(ATK+45)" },
+                { name: "狂戦士の鎧", type: "armor", def: 35, desc: "痛みを忘れる呪いの鎧(DEF+35)" },
+                { name: "狂乱の首飾り", type: "accessory", agi: 10, desc: "理性を削り速度を得る(AGI+10)" }
+            );
+        }
         if (bt.isDarkSageLoot) {
             UI.addLog("闇の賢者の残した「闇の叡智の結晶」を手に入れた！");
             this.inventory.push({

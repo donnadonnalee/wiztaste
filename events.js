@@ -223,7 +223,7 @@ const Events = {
                 game.startCustomBattle([{
                     id: 'monster-0', name: "スモールゴブリン", hp: 40, maxHp: 40, currentHp: 40, atk: 10, agi: 5, exp: 20, level: 4,
                     svg: `<img src="assets/event_4child.png" style="width:100%; height:100%; object-fit:contain; transform:scale(0.8);" />`
-                }]);
+                }], { isSmallGoblinLoot: true });
             };
             const btnMercy = document.createElement('button');
             btnMercy.className = 'btn'; btnMercy.textContent = '見逃す';
@@ -338,7 +338,7 @@ const Events = {
                 game.startCustomBattle([{
                     id: 'monster-0', name: "キングゴブリン", hp: 1300, maxHp: 1300, currentHp: 1300, atk: 130, agi: 25, exp: 600, level: 6,
                     svg: `<img src="assets/event_6parent_friend.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.5);" />`
-                }]);
+                }], { isKingGoblinLoot: true });
             };
             options.appendChild(btnFight);
         } else {
@@ -353,7 +353,7 @@ const Events = {
                 game.startCustomBattle([{
                     id: 'monster-0', name: "怒りのキングゴブリン", hp: 1300, maxHp: 1300, currentHp: 1300, atk: 130, agi: 25, exp: 600, level: 6,
                     svg: `<img src="assets/event_6parent_enemy.png" style="width:100%; height:100%; object-fit:contain; transform:scale(1.5);" />`
-                }]);
+                }], { isKingGoblinLoot: true });
             };
             options.appendChild(btnFight);
         }
