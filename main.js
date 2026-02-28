@@ -483,11 +483,11 @@ class Game {
             this.party.forEach(p => {
                 if (p.hp > 0) {
                     p.exp += totalExp;
-                    let nextExp = Math.floor(50 * Math.pow(p.level, 1.7));
+                    let nextExp = Math.floor(30 * Math.pow(p.level, 1.35) + 20 * p.level);
                     while (p.exp >= nextExp) {
                         p.exp -= nextExp;
                         this.levelUp(p);
-                        nextExp = Math.floor(50 * Math.pow(p.level, 1.7));
+                        nextExp = Math.floor(30 * Math.pow(p.level, 1.35) + 20 * p.level);
                     }
                 }
             });
