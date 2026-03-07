@@ -89,31 +89,30 @@ const ITEM_PREFIXES = [
     { name: '聖なる', mult: 3.0, weight: 2 }
 ];
 
-const MONSTER_NAMES = [
-    'スライム', 'バット', 'スパイダー', 'スネーク', 'ゴブリン',
-    'スケルトン', 'ファントム', 'オーガ', 'デーモン', 'ドラゴン',
-    'ゾンビ', 'メイジ', 'ヴァンパイア', 'デビル', 'ダイナソー', 'イーター', 'ディアブロ', 'リッチ'
-];
-
-const MONSTER_STATS_MULT = [
-    { hp: 1.2, atk: 0.8, agi: 0.5 }, /* スライム */
-    { hp: 0.6, atk: 0.8, agi: 1.5 }, /* バット */
-    { hp: 0.8, atk: 1.0, agi: 1.2 }, /* スパイダー */
-    { hp: 0.7, atk: 1.2, agi: 1.3 }, /* スネーク */
-    { hp: 1.0, atk: 1.0, agi: 1.0 }, /* ゴブリン */
-    { hp: 0.8, atk: 1.2, agi: 0.8 }, /* スケルトン */
-    { hp: 0.5, atk: 1.5, agi: 1.8 }, /* ファントム */
-    { hp: 2.8, atk: 1.5, agi: 0.6 }, /* オーガ */
-    { hp: 2.0, atk: 1.8, agi: 1.2 }, /* デーモン */
-    { hp: 2.5, atk: 2.5, agi: 1.0 }, /* ドラゴン */
-    { hp: 3.5, atk: 1.1, agi: 0.4 }, /* ゾンビ */
-    { hp: 0.7, atk: 3.5, agi: 0.9 }, /* メイジ */
-    { hp: 1.3, atk: 1.4, agi: 1.5 }, /* ヴァンパイア */
-    { hp: 1.2, atk: 5.0, agi: 1.1 }, /* デビル */
-    { hp: 2.7, atk: 2.5, agi: 0.5 }, /* ダイナソー */
-    { hp: 0.3, atk: 1.4, agi: 0.5 }, /* イーター */
-    { hp: 3.2, atk: 2.0, agi: 1.6 },  /* ディアブロ */
-    { hp: 4.2, atk: 1.0, agi: 2.6 },  /* リッチ */
+// ==========================================
+// 通常のモンスターの設定（ここに行を追加することで自動実装されます）
+// ==========================================
+// 深層用モンスター（18〜29）の画像IDと被らないように、新しい敵を追加する場合は
+// id: 30 以降の数字を指定して「assets/monster_X.png」を用意してください。
+const REGULAR_ENEMIES_CONFIG = [
+    { id: 0, name: 'スライム', stats: { hp: 1.2, atk: 0.8, agi: 0.5 } },
+    { id: 1, name: 'バット', stats: { hp: 0.6, atk: 0.8, agi: 1.5 } },
+    { id: 2, name: 'スパイダー', stats: { hp: 0.8, atk: 1.0, agi: 1.2 } },
+    { id: 3, name: 'スネーク', stats: { hp: 0.7, atk: 1.2, agi: 1.3 } },
+    { id: 4, name: 'ゴブリン', stats: { hp: 1.0, atk: 1.0, agi: 1.0 } },
+    { id: 5, name: 'スケルトン', stats: { hp: 0.8, atk: 1.2, agi: 0.8 } },
+    { id: 6, name: 'ファントム', stats: { hp: 0.5, atk: 1.5, agi: 1.8 } },
+    { id: 7, name: 'オーガ', stats: { hp: 2.8, atk: 1.5, agi: 0.6 } },
+    { id: 8, name: 'デーモン', stats: { hp: 2.0, atk: 1.8, agi: 1.2 } },
+    { id: 9, name: 'ドラゴン', stats: { hp: 2.5, atk: 2.5, agi: 1.0 } },
+    { id: 10, name: 'ゾンビ', stats: { hp: 3.5, atk: 1.1, agi: 0.4 } },
+    { id: 11, name: 'メイジ', stats: { hp: 0.7, atk: 3.5, agi: 0.9 } },
+    { id: 12, name: 'ヴァンパイア', stats: { hp: 1.3, atk: 1.4, agi: 1.5 } },
+    { id: 13, name: 'デビル', stats: { hp: 1.2, atk: 5.0, agi: 1.1 } },
+    { id: 14, name: 'ダイナソー', stats: { hp: 2.7, atk: 2.5, agi: 0.5 } },
+    { id: 15, name: 'イーター', stats: { hp: 0.3, atk: 1.4, agi: 0.5 } },
+    { id: 16, name: 'ディアブロ', stats: { hp: 3.2, atk: 2.0, agi: 1.6 } },
+    { id: 17, name: 'リッチ', stats: { hp: 4.2, atk: 1.0, agi: 2.6 } }
 ];
 
 const ENEMY_VARIANTS = [
@@ -126,15 +125,16 @@ const ENEMY_VARIANTS = [
 
 const MONSTERS = [];
 let _generatedMonsters = [];
-MONSTER_NAMES.forEach((name, i) => {
+REGULAR_ENEMIES_CONFIG.forEach((config, i) => {
     ENEMY_VARIANTS.forEach((v, j) => {
-        const htmlStr = `<img src="assets/monster_${i}.png" 
+        const htmlStr = `<img src="assets/monster_${config.id}.png" 
                     style="width:100%; height:100%; object-fit:contain; object-position:bottom; transform-origin:bottom; filter: ${v.filter}; ${v.scale}; image-rendering: pixelated;" />`;
         _generatedMonsters.push({
-            name: v.prefix + MONSTER_NAMES[i],
+            name: v.prefix + config.name,
             svgStr: htmlStr,
             baseVal: i * 2 + j * 5,
-            imgIndex: i
+            imgIndex: config.id,
+            statsMult: config.stats
         });
     });
 });
@@ -143,7 +143,7 @@ _generatedMonsters.sort((a, b) => a.baseVal - b.baseVal);
 _generatedMonsters.forEach((m, idx) => {
     const floorRaw = idx / 7;
     const scale = 1 + floorRaw * 0.2 + Math.pow(1.3, floorRaw) * 0.15;
-    const statsMult = MONSTER_STATS_MULT[m.imgIndex] || { hp: 1, atk: 1, agi: 1 };
+    const statsMult = m.statsMult || { hp: 1, atk: 1, agi: 1 };
 
     MONSTERS.push({
         name: m.name,
