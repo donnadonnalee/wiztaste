@@ -812,8 +812,18 @@ class Game {
                     else UI.addLog(`${item.name}は闇に呑まれた...`);
                 });
                 this.inventory = remainingInventory;
-
                 UI.addLog("パーティは疲弊し、多くの持ち物を失って地上へ弾き出された……");
+
+                // Reset dungeon progress for Abyss mode wipe
+                this.npcFlags = {
+                    helpedAdventurer: false, event5FDone: false, event9FDone: false,
+                    metSwordsman: false, event3FDone: false, event7FDone: false,
+                    savedGoblin: false, friendGoblin: false, event4FDone: false, event6FDone: false,
+                    event8FDone: false, hasMirror: false, event1FDone: false
+                };
+                generateAllLevels();
+                this.visited = LEVELS.map(() => Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(false)));
+
                 this.exitBattle();
                 document.getElementById('floor-indicator').textContent = 'B1F';
                 this.showDeepRanking(previousFloor);
