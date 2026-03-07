@@ -653,6 +653,11 @@ class Game {
         if (bt.isBoss) {
             this.npcFlags[`boss10FDefeated`] = true;
             UI.addLog(`アビスロードを討伐した！しかし、渦の最深部からは未だ瘴気が漏れ出している...`);
+            // Turn the boss tile into the downstairs (3) so the player can immediately proceed to 11F
+            if (this.currentFloor === 9) {
+                LEVELS[9][this.playerPos.y][this.playerPos.x] = 3;
+                UI.addLog(`床が崩れ落ち、さらなる深層へ続く大穴（下階段）が現れた！`);
+            }
         }
         if (bt.isMidBoss) {
             const floor = bt.isMidBossFloor || (this.currentFloor + 1);
