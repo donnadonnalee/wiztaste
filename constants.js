@@ -120,7 +120,8 @@ const ENEMY_VARIANTS = [
     { prefix: '', filter: 'none', scale: 'transform: scale(1.2);' },
     { prefix: 'レッド', filter: 'hue-rotate(180deg) saturate(2)', scale: 'transform: scale(1.2);' },
     { prefix: 'ダーク', filter: 'hue-rotate(270deg) brightness(0.6)', scale: 'transform: scale(1.2);' },
-    { prefix: 'キング', filter: 'hue-rotate(45deg) brightness(1.5)', scale: 'transform: scale(1.6);' }
+    { prefix: 'キング', filter: 'hue-rotate(45deg) brightness(1.5)', scale: 'transform: scale(1.6);' },
+    { prefix: 'アビス', filter: 'hue-rotate(220deg) brightness(0.4)', scale: 'transform: scale(1.6);' }
 ];
 
 const MONSTERS = [];
@@ -188,6 +189,8 @@ const ENEMY_SKILLS = {
     27: { name: 'まばゆい光', chance: 0.3, type: 'aoe', desc: '強烈な光が視界を奪う！', mult: 0.5, se: 'se_magic', flashColor: 'rgba(255,255,200,0.8)' },
     28: { name: '命を刈り取る手', chance: 0.3, type: 'drain', desc: '冷たい手で命を刈り取った！', mult: 1.5, se: 'se_drain', flashColor: 'rgba(0,0,100,0.5)' },
     29: { name: '死の絶叫', chance: 0.3, type: 'death', desc: '呪われた絶叫が響き渡る！', mult: 1.0, se: 'se_heavy_attack', flashColor: 'rgba(200,0,0,0.7)' },
+    30: { name: '崩落', chance: 0.15, type: 'aoe', desc: '天井が崩れ落ちてきた！', mult: 1.0, se: 'se_heavy_attack', flashColor: 'rgba(150,100,50,0.7)' },
+    31: { name: '腐食液', chance: 0.3, type: 'drain', desc: '腐食性の液体を浴びせかけてきた！', mult: 1.0, se: 'se_magic', flashColor: 'rgba(100,255,50,0.7)' },
     'boss': { name: '絶望の波動', chance: 0.1, type: 'aoe', desc: '周囲の空気が重く震える...', mult: 2.0, se: 'se_heavy_attack', flashColor: 'rgba(255,255,255,0.8)' }
 };
 
@@ -430,5 +433,29 @@ MONSTERS.push({
     exp: 10000,
     imgIndex: 29,
     svg: `<img src="assets/monster_29.png" style="width:100%; height:100%; object-fit:contain; object-position:bottom; filter: hue-rotate(180deg) saturate(1.2); transform: scale(1.2); image-rendering: pixelated;" />`,
+    deepOnly: true
+});
+
+MONSTERS.push({
+    name: "ジャイアントスケルトン",
+    level: 12,
+    hp: 1800,
+    atk: 180,
+    agi: 30,
+    exp: 12000,
+    imgIndex: 30,
+    svg: `<img src="assets/monster_30.png" style="width:100%; height:100%; object-fit:contain; object-position:bottom; filter: hue-rotate(180deg) saturate(1.2); transform: scale(1.2); image-rendering: pixelated;" />`,
+    deepOnly: true
+});
+
+MONSTERS.push({
+    name: "ジャイアントゾンビ",
+    level: 11,
+    hp: 1100,
+    atk: 100,
+    agi: 10,
+    exp: 9000,
+    imgIndex: 31,
+    svg: `<img src="assets/monster_31.png" style="width:100%; height:100%; object-fit:contain; object-position:bottom; filter: hue-rotate(180deg) saturate(1.2); transform: scale(1.2); image-rendering: pixelated;" />`,
     deepOnly: true
 });
