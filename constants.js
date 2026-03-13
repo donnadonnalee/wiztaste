@@ -5,13 +5,13 @@ const VIEW_DIST = 6;
 const MAP_SIZE = 16;
 
 const CLASSES = {
-    WARRIOR: { name: '戦士', hp: 30, mp: 0, str: 15, int: 5, vit: 15, agi: 8, luk: 5, desc: '高いHPと防御力を誇る前衛の要。', skillDesc: '全力振り：大ダメージを与える強力な一撃。' },
-    THIEF: { name: '盗賊', hp: 20, mp: 10, str: 10, int: 8, vit: 8, agi: 15, luk: 15, desc: '素早さと運が高く、宝箱の扱いに長けている。', skillDesc: '不意打ち: 素早さを活かした奇襲攻撃。' },
+    WARRIOR: { name: '戦士', hp: 30, mp: 0, str: 15, int: 5, vit: 15, agi: 8, luk: 5, desc: '高いHPと防御力を誇る前衛の要。', skillDesc: '勇猛の叫び：次の戦闘の初撃ダメージが上昇する。' },
+    THIEF: { name: '盗賊', hp: 20, mp: 10, str: 10, int: 8, vit: 8, agi: 15, luk: 15, desc: '素早さと運が高く、宝箱の扱いに長けている。', skillDesc: '隠密の眼: 階層内の罠や秘密をすべて見抜く。' },
     CLERIC: { name: '僧侶', hp: 22, mp: 12, str: 8, int: 12, vit: 10, agi: 10, luk: 10, desc: '神聖な魔法でパーティの傷を癒やす。', skillDesc: 'ヒール: 味方一人のHPを大きく回復する。' },
     MAGE: { name: '魔術師', hp: 15, mp: 25, str: 5, int: 18, vit: 5, agi: 12, luk: 8, desc: '強力な魔術を操り、敵軍を一掃する。', skillDesc: 'ファイヤーボール: 敵全体に魔法ダメージを与える。' },
-    SAMURAI: { name: '侍', hp: 25, mp: 12, str: 16, int: 8, vit: 12, agi: 14, luk: 8, desc: '刀を極め、強力な連撃を放つ。', skillDesc: '燕返し: 二回連続でダメージを与える。' },
-    MARTIAL_ARTIST: { name: '武闘家', hp: 28, mp: 0, str: 14, int: 6, vit: 14, agi: 16, luk: 6, desc: '強靭な肉体を持ち、防御無視の熱波を放つ。', skillDesc: '気功波: 敵の防御を無視してダメージを与える。' },
-    ARCHER: { name: '狩人', hp: 20, mp: 10, str: 12, int: 8, vit: 10, agi: 18, luk: 12, desc: '弓矢の達人。狙いすました一撃で敵を射抜く。', skillDesc: '狙い撃ち: 急所を突く高威力の射撃。' },
+    SAMURAI: { name: '侍', hp: 25, mp: 12, str: 16, int: 8, vit: 12, agi: 14, luk: 8, desc: '刀を極め、強力な連撃を放つ。', skillDesc: '明鏡止水: 次の戦闘の間、攻撃と防御を飛躍させる。' },
+    MARTIAL_ARTIST: { name: '武闘家', hp: 28, mp: 0, str: 14, int: 6, vit: 14, agi: 16, luk: 6, desc: '強靭な肉体を持ち、防御無視の技を繰り出す。', skillDesc: '点穴: 次の戦闘の間、敵の防御力を完全に無視して攻撃。' },
+    ARCHER: { name: '狩人', hp: 20, mp: 10, str: 12, int: 8, vit: 10, agi: 18, luk: 12, desc: '弓矢の達人。狙いすました一撃で敵を射抜く。', skillDesc: '狙撃準備: 次の戦闘開始時、先制攻撃を行う。' },
     MONK: { name: 'モンク', hp: 26, mp: 12, str: 13, int: 12, vit: 12, agi: 12, luk: 10, desc: '回復と攻撃を両立し、粘り強く戦う。', skillDesc: '精神統一: 味方を回復しつつ、敵へ追撃を行う。' },
     BISHOP: { name: 'ビショップ', hp: 22, mp: 22, str: 8, int: 18, vit: 10, agi: 10, luk: 12, desc: '究極の聖職者。癒やしと浄化を同時に行う。', skillDesc: 'ホーリーライト: 味方を回復し、敵全員に神聖ダメージ。' }
 };

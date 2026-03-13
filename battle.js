@@ -14,6 +14,23 @@ const Battle = {
             }
         });
 
+        // Hunter's Pre-emptive strike (Extra action at start)
+        for (let p of game.party) {
+            if (p.hp > 0 && p.battleBuffs?.preemptiveStrike) {
+                const aliveMonsters = monsters.filter(m => m.currentHp > 0);
+                if (aliveMonsters.length > 0) {
+                    let targetIdx = Math.floor(Math.random() * aliveMonsters.length);
+                    let monster = aliveMonsters[targetIdx];
+                    audio.playSE('se_arrow');
+                    const dmg = Math.max(1, game.getEffectiveStat(p, 'str') + Math.floor(game.getEffectiveStat(p, 'agi') / 2));
+                    monster.currentHp -= dmg;
+                    UI.addLog(`【先制】${p.name}が不意を突いて射撃！ ${monster.name}に${dmg}のダメージ！`);
+                    UI.showHitEffect(monster.id, dmg);
+                    p.battleBuffs.preemptiveStrike = false; // Consume it
+                }
+            }
+        }
+
         // Sort by agility
         game.currentBattle.turnOrder.sort((a, b) => (b.actor.agi || 10) - (a.actor.agi || 10));
 
@@ -48,7 +65,26 @@ const Battle = {
                 let monster = aliveMonsters[targetIdx];
                 if (action.type === 'attack') {
                     audio.playSE('se_attack');
-                    const dmg = Math.max(1, game.getEffectiveStat(action.actor, 'str') + Math.floor(Math.random() * 5) - 2);
+                    let str = game.getEffectiveStat(action.actor, 'str');
+                    let mult = 1.0;
+                    
+                    // Warrior's first turn buff
+                    if (action.actor.battleBuffs?.atk150FirstTurn) {
+                        mult *= 1.5;
+                        action.actor.battleBuffs.atk150FirstTurn = false; // Only once per battle
+                    }
+                    // Samurai buff
+                    if (action.actor.battleBuffs?.atk200Def200) {
+                        mult *= 2.0;
+                    }
+
+                    let targetDef = game.getEffectiveStat(monster, 'vit') / 2;
+                    // Martial Artist's ignore defense
+                    if (action.actor.battleBuffs?.ignoreDef) {
+                        targetDef = 0;
+                    }
+
+                    const dmg = Math.max(1, Math.floor((str * mult + Math.random() * 5) - targetDef));
                     monster.currentHp -= dmg;
                     UI.addLog(`${action.actor.name}の攻撃！ ${monster.name}に${dmg}のダメージ！`);
                     UI.showHitEffect(monster.id, dmg);
@@ -237,7 +273,9 @@ const Battle = {
             const target = aliveParty[Math.floor(Math.random() * aliveParty.length)];
             const pIdx = game.party.indexOf(target);
             if (skill.type === 'attack') {
-                const dmg = Math.max(1, Math.floor((actor.atk * skill.mult) - game.getEffectiveStat(target, 'vit') / 2) + Math.floor(Math.random() * 3));
+                let targetDef = game.getEffectiveStat(target, 'vit') / 2;
+                if (target.battleBuffs?.atk200Def200) targetDef *= 2.0; // Samurai defense buff
+                const dmg = Math.max(1, Math.floor((actor.atk * skill.mult) - targetDef) + Math.floor(Math.random() * 3));
                 target.hp = Math.max(0, target.hp - dmg);
                 UI.addLog(`${target.name}は${dmg}のダメージ！`);
                 UI.showPartyHitEffect(pIdx, dmg);

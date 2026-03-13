@@ -129,7 +129,8 @@ class Game {
             bonusLeft: 0, level: 1, exp: 0, gold: 0,
             equipment: { weapon: null, armor: null, accessory: null },
             inventory: [],
-            statuses: { poison: false, paralysis: false, confusion: false }
+            statuses: { poison: false, paralysis: false, confusion: false },
+            battleBuffs: {} // For camp skills
         };
     }
 
@@ -166,6 +167,7 @@ class Game {
         // Migration: Ensure all characters have statuses
         this.party.forEach(p => {
             if (!p.statuses) p.statuses = { poison: false, paralysis: false, confusion: false };
+            if (!p.battleBuffs) p.battleBuffs = {};
         });
         this.startTime = Date.now();
         this.state = 'EXPLORE';
@@ -1114,13 +1116,51 @@ class Game {
     }
 
     castCampMagic(idx) {
-        const caster = this.party[idx]; if (caster.mp < 3 || caster.hp <= 0) return;
-        let target = null, low = 1.0;
-        this.party.forEach(p => { const effMax = this.getEffectiveMaxHp(p); const pct = p.hp / effMax; if (p.hp > 0 && pct < low && p.hp < effMax) { low = pct; target = p; } });
-        if (!target) { UI.addLog("回復が必要な仲間にいない。"); return; }
-        caster.mp -= 3; const heal = Math.max(15, caster.int + 10);
-        target.hp = Math.min(this.getEffectiveMaxHp(target), target.hp + heal);
-        UI.addLog(`${caster.name}の回復魔法！${target.name}のHPが${heal}回復した。`);
+        const caster = this.party[idx];
+        const job = caster.job;
+
+        if (['僧侶', 'ビショップ', 'モンク'].indexOf(job) !== -1) {
+            // Heal logic
+            if (caster.mp < 4 || caster.hp <= 0) { UI.addLog("MPが足りない。"); return; }
+            let target = null, low = 1.0;
+            this.party.forEach(p => { const effMax = this.getEffectiveMaxHp(p); const pct = p.hp / effMax; if (p.hp > 0 && pct < low && p.hp < effMax) { low = pct; target = p; } });
+            if (!target) { UI.addLog("回復が必要な仲間にいない。"); return; }
+            caster.mp -= 4; const heal = Math.max(15, caster.int + 10);
+            target.hp = Math.min(this.getEffectiveMaxHp(target), target.hp + heal);
+            UI.addLog(`${caster.name}の回復魔法！${target.name}のHPが${heal}回復した。`);
+        } else if (job === '戦士') {
+            if (caster.mp < 5) { UI.addLog("MPが足りない。"); return; }
+            caster.mp -= 5;
+            caster.battleBuffs.atk150FirstTurn = true;
+            UI.addLog(`${caster.name}は戦意を鼓舞した！ 次の戦闘開始時に攻撃力が上昇する。`);
+        } else if (job === '盗賊') {
+            if (caster.mp < 10) { UI.addLog("MPが足りない。"); return; }
+            caster.mp -= 10;
+            const floor = LEVELS[this.currentFloor];
+            for (let y = 0; y < floor.length; y++) {
+                for (let x = 0; x < floor[y].length; x++) {
+                    if ([4, 5, 6, 7].includes(floor[y][x])) {
+                        this.visited[this.currentFloor][y][x] = true;
+                    }
+                }
+            }
+            UI.addLog(`${caster.name}の「隠密の眼」！ 階層内の罠と秘密が暴かれた。`);
+        } else if (job === '狩人') {
+            if (caster.mp < 10) { UI.addLog("MPが足りない。"); return; }
+            caster.mp -= 10;
+            caster.battleBuffs.preemptiveStrike = true;
+            UI.addLog(`${caster.name}は弓に矢をつがえた。次の戦闘で先制攻撃を行う。`);
+        } else if (job === '侍') {
+            if (caster.mp < 30) { UI.addLog("MPが足りない。"); return; }
+            caster.mp -= 30;
+            caster.battleBuffs.atk200Def200 = true;
+            UI.addLog(`${caster.name}は精神を統一した。次の戦闘の間、圧倒的な力を発揮する。`);
+        } else if (job === '武闘家') {
+            if (caster.mp < 15) { UI.addLog("MPが足りない。"); return; }
+            caster.mp -= 15;
+            caster.battleBuffs.ignoreDef = true;
+            UI.addLog(`${caster.name}は気の流れを見極めた。次の戦闘の間、敵の防御を無視する。`);
+        }
         this.updateUI();
     }
 
