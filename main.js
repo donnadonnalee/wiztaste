@@ -166,11 +166,17 @@ class Game {
             LEVELS.length = 0;
             data.levels.forEach(l => LEVELS.push(l));
         }
-        // Migration: Ensure all characters have statuses
+        // Migration: Ensure all characters have statuses and refresh item descriptions
         this.party.forEach(p => {
             if (!p.statuses) p.statuses = { poison: false, paralysis: false, confusion: false };
             if (!p.battleBuffs) p.battleBuffs = {};
+            if (p.equipment) {
+                Object.values(p.equipment).forEach(item => {
+                    if (item) this.refreshDescription(item);
+                });
+            }
         });
+        this.inventory.forEach(item => this.refreshDescription(item));
         this.startTime = Date.now();
         this.state = 'EXPLORE';
         document.getElementById('char-create-screen').style.display = 'none';
@@ -1210,6 +1216,20 @@ class Game {
         return val;
     }
 
+    refreshDescription(item) {
+        if (!item || item.type === 'consumable' || !item.desc) return;
+        const stats = ['atk', 'def', 'int', 'agi', 'vit', 'str', 'luk'];
+        stats.forEach(s => {
+            if (item[s] !== undefined) {
+                const val = Math.abs(item[s]);
+                const sign = item[s] >= 0 ? '+' : '-';
+                // Regex to find STAT+X or STAT-X, preserving case if needed, but constants use uppercase
+                const re = new RegExp(`${s.toUpperCase()}([\\+\\-])([0-9]+)`, 'g');
+                item.desc = item.desc.replace(re, `${s.toUpperCase()}${sign}${val}`);
+            }
+        });
+    }
+
     getAtk(p) {
         let val = this.getEffectiveStat(p, 'str');
         ['weapon', 'armor', 'accessory'].forEach(s => {
@@ -1364,11 +1384,7 @@ class Game {
 
             // Dynamically update description to match multi-stats
             if (p.mult !== 1.0) {
-                item.desc = item.desc.replace(/([\+\-])([0-9]+)/g, (match, sign, val) => {
-                    const originalVal = parseInt(val) * (sign === '-' ? -1 : 1);
-                    const newVal = Math.round(originalVal * p.mult);
-                    return (newVal >= 0 ? '+' : '') + newVal;
-                });
+                this.refreshDescription(item);
             }
 
             // Add random status effects/resistances
