@@ -287,9 +287,9 @@ canvas#view-canvas {
     font-size: 12px;
 }
 
-.btn:hover {
-    background: var(--text-color);
-    color: #000;
+.btn:hover:not(:disabled) {
+    background: var(--text-color) !important;
+    color: #000 !important;
 }
 
 .btn:disabled {
