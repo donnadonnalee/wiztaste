@@ -1365,7 +1365,8 @@ class Game {
             // Dynamically update description to match multi-stats
             if (p.mult !== 1.0) {
                 item.desc = item.desc.replace(/([\+\-])([0-9]+)/g, (match, sign, val) => {
-                    const newVal = Math.round(parseInt(val) * p.mult);
+                    const originalVal = parseInt(val) * (sign === '-' ? -1 : 1);
+                    const newVal = Math.round(originalVal * p.mult);
                     return (newVal >= 0 ? '+' : '') + newVal;
                 });
             }

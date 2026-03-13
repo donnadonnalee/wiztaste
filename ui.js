@@ -289,6 +289,10 @@ const UI = {
                         ${p.statuses?.poison ? '<span style="color:#0f0; margin-right:4px;">[毒]</span>' : ''}
                         ${p.statuses?.paralysis ? '<span style="color:#ff0; margin-right:4px;">[麻]</span>' : ''}
                         ${p.statuses?.confusion ? '<span style="color:#f0f; margin-right:4px;">[混]</span>' : ''}
+                        ${p.battleBuffs?.atk150FirstTurn ? '<span style="color:#f55; margin-right:4px;">[攻]</span>' : ''}
+                        ${p.battleBuffs?.preemptiveStrike ? '<span style="color:#55f; margin-right:4px;">[先]</span>' : ''}
+                        ${p.battleBuffs?.atk200Def200 ? '<span style="color:#ffcc00; margin-right:4px;">[不]</span>' : ''}
+                        ${p.battleBuffs?.ignoreDef ? '<span style="color:#00ffff; margin-right:4px;">[点]</span>' : ''}
                     </div>
                     ${isGhost ? `
                     <div class="ghost-status" style="text-align:center; padding: 5px 0;">[ 亡霊 ]</div>
@@ -438,6 +442,18 @@ const UI = {
             };
 
             const portraitUrl = isGhost ? 'assets/face_亡霊.jpeg' : p.portrait;
+            const getAtkBonus = () => {
+                const effective = game.getAtk(p);
+                const str = p.str || 0;
+                const bonus = effective - str;
+                return bonus !== 0 ? ` <span style="color:${bonus > 0 ? '#5f5' : '#f55'}">(${bonus > 0 ? '+' : ''}${bonus})</span>` : '';
+            };
+            const getDefBonus = () => {
+                const effective = game.getDef(p);
+                const vit = p.vit || 0;
+                const bonus = effective - vit;
+                return bonus !== 0 ? ` <span style="color:${bonus > 0 ? '#5f5' : '#f55'}">(${bonus > 0 ? '+' : ''}${bonus})</span>` : '';
+            };
             html += `
                 <div id="camp-char-${idx}" class="camp-character ${isLowHp ? 'low-hp' : ''} ${isGhost ? 'ghost-member' : ''}" style="position:relative; overflow:hidden;">
                     <div style="display:flex; gap:15px; position:relative; z-index:2; width:100%;">
@@ -456,8 +472,8 @@ const UI = {
                                     <div>VIT: ${p.vit}${getBonus('vit')}</div>
                                     <div>AGI: ${p.agi}${getBonus('agi')}</div>
                                     <div>LUK: ${p.luk}${getBonus('luk')}</div>
-                                    <div style="color:#ffcc00; font-weight:bold;">ATK: ${game.getAtk(p)}</div>
-                                    <div style="color:#ffcc00; font-weight:bold;">DEF: ${game.getDef(p)}</div>
+                                    <div style="color:#ffcc00; font-weight:bold;">ATK: ${game.getAtk(p)}${getAtkBonus()}</div>
+                                    <div style="color:#ffcc00; font-weight:bold;">DEF: ${game.getDef(p)}${getDefBonus()}</div>
                                     <div style="font-size:10px; color:#888;">EXP: ${p.exp}/${nextExp}</div>
                                 </div>
                                 <div style="color:#888; font-size:10px; margin-top:4px;">${p.desc}</div>
