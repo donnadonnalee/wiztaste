@@ -42,27 +42,93 @@ const Battle = {
             if (action.isPlayer && action.actor.hp <= 0) continue;
             if (!action.isPlayer && action.actor.currentHp <= 0) continue;
 
-            // Status: Paralysis recovery check (approx 20% chance)
-            if (action.actor.statuses?.paralysis) {
-                if (Math.random() < 0.20) {
-                    action.actor.statuses.paralysis = false;
-                    UI.addLog(`${action.actor.name}の身体のしびれが取れた！`);
+            // --- Status Effects Tick ---
+            const actor = action.actor;
+            const isPlayer = action.isPlayer;
+
+            // 1. Poison Tick (3% damage)
+            if (actor.statuses?.poison) {
+                const maxHp = isPlayer ? game.getEffectiveMaxHp(actor) : actor.maxHp;
+                const poiDmg = Math.max(1, Math.floor(maxHp * 0.03));
+                if (isPlayer) {
+                    actor.hp = Math.max(1, actor.hp - poiDmg); // Battle poison won't kill player directly usually, but let's follow game logic
+                    UI.showPartyHitEffect(game.party.indexOf(actor), poiDmg);
+                } else {
+                    actor.currentHp = Math.max(0, actor.currentHp - poiDmg);
+                    UI.showHitEffect(actor.id, poiDmg);
+                }
+                UI.addLog(`${actor.name}は毒のダメージを受けた！(${poiDmg})`);
+                if (!isPlayer && actor.currentHp <= 0) {
+                    UI.addLog(`${actor.name}を倒した！`);
+                    continue; 
                 }
             }
 
-            // Status: Paralysis skip turn check (75% chance to fail action)
-            if (action.actor.statuses?.paralysis) {
+            // 2. Paralysis Recovery check (20%)
+            if (actor.statuses?.paralysis) {
+                if (Math.random() < 0.20) {
+                    actor.statuses.paralysis = false;
+                    UI.addLog(`${actor.name}の身体のしびれが取れた！`);
+                }
+            }
+
+            // 3. Paralysis skip turn check (75%)
+            if (actor.statuses?.paralysis) {
                 if (Math.random() < 0.75) {
-                    UI.addLog(`${action.actor.name}は身体がしびれて動けない！`);
+                    UI.addLog(`${actor.name}は身体がしびれて動けない！`);
                     await new Promise(r => setTimeout(r, 600));
                     continue;
                 }
             }
 
+            // 4. Confusion Recovery check (25%)
+            if (actor.statuses?.confusion) {
+                if (Math.random() < 0.25) {
+                    actor.statuses.confusion = false;
+                    UI.addLog(`${actor.name}は正気に戻った！`);
+                }
+            }
 
-            if (action.isPlayer) {
+            // 5. Confusion Action check
+            let isConfusedAction = false;
+            if (actor.statuses?.confusion) {
+                UI.addLog(`${actor.name}は混乱している！`);
+                if (Math.random() < 0.5) {
+                    isConfusedAction = true;
+                }
+            }
+
+            if (isPlayer) {
+                let monster;
+                if (isConfusedAction) {
+                    // Confused player attacks someone randomly
+                    const allTargets = [...game.party.filter(p => p.hp > 0), ...monsters.filter(m => m.currentHp > 0)];
+                    const target = allTargets[Math.floor(Math.random() * allTargets.length)];
+                    UI.addLog(`${actor.name}は我を忘れて襲いかかった！`);
+                    
+                    if (game.party.includes(target)) {
+                        // Attack ally
+                        const pIdx = game.party.indexOf(target);
+                        const dmg = Math.max(1, Math.floor(game.getAtk(actor) - game.getDef(target) / 2) + Math.floor(Math.random() * 5));
+                        target.hp = Math.max(0, target.hp - dmg);
+                        UI.addLog(`${target.name}に${dmg}のダメージ！`);
+                        UI.showPartyHitEffect(pIdx, dmg);
+                        audio.playSE('se_damage');
+                    } else {
+                        // Attack enemy
+                        const dmg = Math.max(1, Math.floor(game.getAtk(actor) - (target.vit || 10) / 2) + Math.floor(Math.random() * 5));
+                        target.currentHp = Math.max(0, target.currentHp - dmg);
+                        UI.addLog(`${target.name}に${dmg}のダメージ！`);
+                        UI.showHitEffect(target.id, dmg);
+                        audio.playSE('se_attack');
+                    }
+                    await new Promise(r => setTimeout(r, 600));
+                    continue;
+                }
+
                 let targetIdx = Math.floor(Math.random() * aliveMonsters.length);
-                let monster = aliveMonsters[targetIdx];
+                monster = aliveMonsters[targetIdx];
+
                 if (action.type === 'attack') {
                     audio.playSE('se_attack');
                     let str = game.getEffectiveStat(action.actor, 'str');
@@ -109,7 +175,32 @@ const Battle = {
                 if (action.actor.currentHp <= 0) continue;
                 const aliveParty = game.party.filter(p => p.hp > 0);
                 if (aliveParty.length === 0) break;
-                this.handleEnemyAction(game, action.actor, aliveParty);
+
+                if (isConfusedAction) {
+                    // Confused monster attacks someone randomly
+                    const allTargets = [...game.party.filter(p => p.hp > 0), ...monsters.filter(m => m.currentHp > 0)];
+                    const target = allTargets[Math.floor(Math.random() * allTargets.length)];
+                    UI.addLog(`${actor.name}は辺り構わず暴れている！`);
+                    
+                    if (game.party.includes(target)) {
+                        // Attack player
+                        const pIdx = game.party.indexOf(target);
+                        const dmg = Math.max(1, Math.floor(actor.atk - game.getDef(target) / 2) + Math.floor(Math.random() * 5));
+                        target.hp = Math.max(0, target.hp - dmg);
+                        UI.addLog(`${target.name}に${dmg}のダメージ！`);
+                        UI.showPartyHitEffect(pIdx, dmg);
+                        audio.playSE('se_damage');
+                    } else {
+                        // Attack ally (monster)
+                        const dmg = Math.max(1, Math.floor(actor.atk - (target.vit || 10) / 2) + Math.floor(Math.random() * 5));
+                        target.currentHp = Math.max(0, target.currentHp - dmg);
+                        UI.addLog(`${target.name}に${dmg}のダメージ！`);
+                        UI.showHitEffect(target.id, dmg);
+                        audio.playSE('se_attack');
+                    }
+                } else {
+                    this.handleEnemyAction(game, action.actor, aliveParty);
+                }
             }
 
             UI.updateUI(game);

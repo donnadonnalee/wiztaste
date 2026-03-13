@@ -306,6 +306,8 @@ class Game {
         audio.unlockAudio(); this.state = 'EXPLORE'; this.startTime = Date.now();
         // Generate new levels for a fresh game
         generateAllLevels();
+        this.thiefSkillActive = LEVELS.map(() => false);
+        this.visited = LEVELS.map(() => Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(false)));
         document.getElementById('story-screen').style.display = 'none';
         UI.addLog("深淵の迷宮へようこそ。10Fのボス討伐を目指せ。");
         audio.playBGM('bgm_explore'); this.updateTimer();
@@ -365,7 +367,8 @@ class Game {
         if (action === 'forward' || action === 'backward') {
             const m = action === 'forward' ? 1 : -1;
             const nx = x + dx * m, ny = y + dy * m;
-            if (map[ny]?.[nx] !== 1 && map[ny]?.[nx] !== 4) {
+            // Allow movement into hidden doors (Tile 4)
+            if (map[ny]?.[nx] !== 1) {
                 this.playerPos.x = nx; this.playerPos.y = ny;
                 this.updateMirrorEffect();
                 this.checkTile();
@@ -389,6 +392,12 @@ class Game {
                         if (Math.random() < 0.05) {
                             p.statuses.paralysis = false;
                             UI.addLog(`${p.name}のしびれが和らいだ。`);
+                        }
+                    if (p.hp > 0 && p.statuses?.confusion) {
+                        // Confusion recovery chance per step (approx 5%)
+                        if (Math.random() < 0.05) {
+                            p.statuses.confusion = false;
+                            UI.addLog(`${p.name}の混乱が解けた。`);
                         }
                     }
                 });
@@ -524,6 +533,7 @@ class Game {
         if (!LEVELS[this.currentFloor]) {
             LEVELS[this.currentFloor] = generateMaze(MAP_SIZE, this.currentFloor);
             this.visited.push(Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(false)));
+            this.thiefSkillActive.push(false);
         }
         let found = false, next = LEVELS[this.currentFloor], target = delta === 1 ? 2 : 3;
         for (let r = 0; r < next.length; r++) { for (let c = 0; c < next[r].length; c++) { if (next[r][c] === target) { this.playerPos.x = c; this.playerPos.y = r; found = true; break; } } if (found) break; }
@@ -858,6 +868,7 @@ class Game {
                 };
                 generateAllLevels();
                 this.visited = LEVELS.map(() => Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(false)));
+                this.thiefSkillActive = LEVELS.map(() => false);
 
                 this.exitBattle();
                 document.getElementById('floor-indicator').textContent = 'B1F';
@@ -882,6 +893,7 @@ class Game {
                 }
 
                 document.getElementById('floor-indicator').textContent = 'B1F';
+                this.thiefSkillActive = LEVELS.map(() => false);
                 this.exitBattle();
                 UI.addLog("気が付いたら迷宮の入り口に戻っていた。アビスロードを倒すまで町には戻れないようだ");
             }
