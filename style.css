@@ -426,11 +426,13 @@ canvas#view-canvas {
 }
 
 .camp-char-actions {
-    width: 80px;
+    flex: 1;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 8px;
 }
 
 @media (max-width: 900px) {

@@ -411,13 +411,13 @@ const UI = {
                                 <div style="color:#888; font-size:10px; margin-top:4px;">${p.desc}</div>
                                 <div style="color:#aaf; font-size:10px; margin-top:1px;">[スキル] ${p.skillDesc}</div>
                             </div>
-                            <div class="camp-char-actions" style="margin-top:8px;">
+                            <div class="camp-char-actions" style="margin-top:10px; border-top: 1px solid #333; padding-top: 5px;">
                                 ${isGhost ? '<div class="ghost-status" style="color:#00ffff; font-weight:bold; text-shadow:0 0 5px #00ffff;">亡霊は動けない</div>' : (game.campMode === 'SELECT_CHARACTER' || game.campMode === 'SELECT_TARGET' ?
-                    `<button class="btn" style="padding:4px; border-color:#ffcc00;" onclick="window.game.executeItemAction(${idx}, ${game.pendingItemIdx}, '${game.campMode === 'SELECT_TARGET' ? 'use' : 'equip'}')">選択</button>` :
-                    ` ${['僧侶', 'ビショップ', 'モンク'].indexOf(p.job) !== -1 ? `<button class="btn" style="padding:4px; font-size:10px; margin-bottom:2px;" onclick="window.game.castCampMagic(${idx})">${p.job === 'モンク' ? '精神統一' : (p.job === 'ビショップ' ? '聖別の儀' : '回復魔法')}(3MP)</button>` : ''}
-                                ${p.equipment.weapon ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="window.game.unequipItem(${idx}, 'weapon')">[${p.equipment.weapon.name}]を外す</button>` : ''}
-                                ${p.equipment.armor ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="window.game.unequipItem(${idx}, 'armor')">[${p.equipment.armor.name}]を外す</button>` : ''}
-                                ${p.equipment.accessory ? `<button class="btn" style="padding:2px 4px; font-size:10px; border-color:#833;" onclick="window.game.unequipItem(${idx}, 'accessory')">[${p.equipment.accessory.name}]を外す</button>` : ''}
+                    `<button class="btn" style="padding:6px 12px; border-color:#ffcc00;" onclick="window.game.executeItemAction(${idx}, ${game.pendingItemIdx}, '${game.campMode === 'SELECT_TARGET' ? 'use' : 'equip'}')">選択</button>` :
+                    ` ${['僧侶', 'ビショップ', 'モンク'].indexOf(p.job) !== -1 ? `<button class="btn" style="padding:4px 8px; font-size:10px;" onclick="window.game.castCampMagic(${idx})">${p.job === 'モンク' ? '精神統一' : (p.job === 'ビショップ' ? '聖別の儀' : '回復魔法')}(3MP)</button>` : ''}
+                                ${p.equipment.weapon ? `<button class="btn" style="padding:4px 8px; font-size:10px; border-color:#833;" onclick="window.game.unequipItem(${idx}, 'weapon')">[${p.equipment.weapon.name}]を外す</button>` : ''}
+                                ${p.equipment.armor ? `<button class="btn" style="padding:4px 8px; font-size:10px; border-color:#833;" onclick="window.game.unequipItem(${idx}, 'armor')">[${p.equipment.armor.name}]を外す</button>` : ''}
+                                ${p.equipment.accessory ? `<button class="btn" style="padding:4px 8px; font-size:10px; border-color:#833;" onclick="window.game.unequipItem(${idx}, 'accessory')">[${p.equipment.accessory.name}]を外す</button>` : ''}
                                 `)}
                             </div>
                         </div>
