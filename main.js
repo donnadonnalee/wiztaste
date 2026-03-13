@@ -1301,13 +1301,18 @@ class Game {
         if (item.type !== 'consumable') {
             const p = ITEM_PREFIXES[Math.floor(Math.random() * ITEM_PREFIXES.length)];
             item.name = p.name + item.name;
-            if (item.atk) item.atk = Math.round(item.atk * p.mult);
-            if (item.def) item.def = Math.round(item.def * p.mult);
-            if (item.int) item.int = Math.round(item.int * p.mult);
-            if (item.agi) item.agi = Math.round(item.agi * p.mult);
-            if (item.vit) item.vit = Math.round(item.vit * p.mult);
-            if (item.str) item.str = Math.round(item.str * p.mult);
-            if (item.luk) item.luk = Math.round(item.luk * p.mult);
+            const stats = ['atk', 'def', 'int', 'agi', 'vit', 'str', 'luk'];
+            stats.forEach(s => {
+                if (item[s] !== undefined) item[s] = Math.round(item[s] * p.mult);
+            });
+
+            // Dynamically update description to match multi-stats
+            if (p.mult !== 1.0) {
+                item.desc = item.desc.replace(/([\+\-])([0-9]+)/g, (match, sign, val) => {
+                    const newVal = Math.round(parseInt(val) * p.mult);
+                    return (newVal >= 0 ? '+' : '') + newVal;
+                });
+            }
 
             // Add random status effects/resistances
             const possibleStatuses = ['poison', 'paralysis', 'confusion'];
