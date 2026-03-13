@@ -190,17 +190,24 @@ const UI = {
         const ctx = game.mCtx, size = 160 / MAP_SIZE;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 160, 160);
         const map = LEVELS[game.currentFloor], visited = game.visited[game.currentFloor];
+        
+        // Thief skill check for legend/enhanced view
+        const isThiefSkillActive = game.thiefSkillActive[game.currentFloor];
+
         for (let y = 0; y < map.length; y++) {
             for (let x = 0; x < map[y].length; x++) {
                 if (!visited[y] || !visited[y][x]) continue;
                 const mc = map[y][x];
-                if (mc === 1 || mc === 4) ctx.fillStyle = '#d3d3d3';
-                else if (mc === 3) ctx.fillStyle = '#ff00ff';
-                else if (mc === 2) ctx.fillStyle = '#00ffff';
-                else if (mc === 6) ctx.fillStyle = '#112211';
-                else if (mc === 8) ctx.fillStyle = '#ff0000';
-                else if (mc === 9) ctx.fillStyle = '#ffff00';
-                else ctx.fillStyle = '#113311';
+                if (mc === 1) ctx.fillStyle = '#666'; // Wall
+                else if (mc === 4) ctx.fillStyle = '#ffaa00'; // Hidden Door (Orange)
+                else if (mc === 5) ctx.fillStyle = '#aa00ff'; // Teleporter (Purple)
+                else if (mc === 7) ctx.fillStyle = '#00ff00'; // Rotating Floor (Green)
+                else if (mc === 6) ctx.fillStyle = '#222';    // Dark Zone
+                else if (mc === 3) ctx.fillStyle = '#ff00ff'; // Downstairs
+                else if (mc === 2) ctx.fillStyle = '#00ffff'; // Upstairs
+                else if (mc === 8) ctx.fillStyle = '#ff0000'; // Boss
+                else if (mc === 9) ctx.fillStyle = '#ffff00'; // Event
+                else ctx.fillStyle = '#113311'; // Path
                 ctx.fillRect(x * size, y * size, size - 1, size - 1);
             }
         }
@@ -210,6 +217,51 @@ const UI = {
         ctx.strokeStyle = '#fff'; ctx.beginPath(); ctx.moveTo(px, py);
         const dx = [0, 1, 0, -1][game.playerPos.dir] * size, dy = [-1, 0, 1, 0][game.playerPos.dir] * size;
         ctx.lineTo(px + dx, py + dy); ctx.stroke();
+
+        // Draw Legend Overlay
+        if (isThiefSkillActive) {
+            this.drawMapLegend(ctx);
+        }
+    },
+
+    drawMapLegend: function (ctx) {
+        const legendItems = [
+            { color: '#ffaa00', label: '隠し扉' },
+            { color: '#aa00ff', label: 'ワープ' },
+            { color: '#00ff00', label: '回転床' },
+            { color: '#222', label: '暗闇', border: '#444' }
+        ];
+        
+        ctx.save();
+        ctx.font = '9px Arial';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        
+        const padding = 4;
+        const boxH = 12;
+        const boxW = 45;
+        const startX = 2;
+        let startY = 160 - (legendItems.length * (boxH + 1)) - 2;
+
+        legendItems.forEach((item, i) => {
+            const y = startY + i * (boxH + 1);
+            // Semi-transparent background for legend
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(startX, y, boxW, boxH);
+            
+            // Color box
+            ctx.fillStyle = item.color;
+            ctx.fillRect(startX + 1, y + 1, boxH - 2, boxH - 2);
+            if (item.border) {
+                ctx.strokeStyle = item.border;
+                ctx.strokeRect(startX + 1, y + 1, boxH - 2, boxH - 2);
+            }
+            
+            // Text
+            ctx.fillStyle = '#fff';
+            ctx.fillText(item.label, startX + boxH, y + boxH / 2);
+        });
+        ctx.restore();
     },
 
     updateUI: function (game) {

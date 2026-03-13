@@ -32,6 +32,7 @@ class Game {
         this.party = [];
         this.inventory = [];
         this.visited = LEVELS.map(() => Array(MAP_SIZE).fill().map(() => Array(MAP_SIZE).fill(false)));
+        this.thiefSkillActive = LEVELS.map(() => false);
         this.state = 'START';
         this.startTime = null;
         this.karma = 0;
@@ -160,6 +161,7 @@ class Game {
         this.party = data.party; this.inventory = data.inventory; this.playerPos = data.pos;
         this.currentFloor = data.floor; this.visited = data.visited; this.npcFlags = data.npcFlags;
         this.karma = data.karma; this.elapsedTimeAtSave = data.elapsed || 0;
+        this.thiefSkillActive = data.thiefSkillActive || LEVELS.map(() => false);
         if (data.levels) {
             LEVELS.length = 0;
             data.levels.forEach(l => LEVELS.push(l));
@@ -1144,6 +1146,7 @@ class Game {
                     }
                 }
             }
+            this.thiefSkillActive[this.currentFloor] = true;
             UI.addLog(`${caster.name}の「隠密の眼」！ 階層内の罠と秘密が暴かれた。`);
         } else if (job === '狩人') {
             if (caster.mp < 10) { UI.addLog("MPが足りない。"); return; }
@@ -1393,6 +1396,7 @@ class Game {
             pos: this.playerPos,
             floor: this.currentFloor,
             visited: this.visited,
+            thiefSkillActive: this.thiefSkillActive,
             npcFlags: this.npcFlags,
             karma: this.karma,
             elapsed: this.elapsedTimeAtSave + (Date.now() - (this.startTime || Date.now())),
