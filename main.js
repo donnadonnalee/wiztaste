@@ -601,7 +601,8 @@ class Game {
         let bossName = "";
         let bossDesc = "";
         let bossImg = `assets/boss${floor}.png`;
-        let bossStats = { hp: 150 * floor + Math.pow(1.3, floor) * 100, atk: 20 + floor * 15, agi: 10 + floor * 4, exp: 500 * floor * floor };
+        const hpScale = isFinalBoss ? 8500 : (150 * floor + Math.pow(1.3, floor) * 100);
+        let bossStats = { hp: hpScale, atk: 20 + floor * 15, agi: 10 + floor * 4, exp: 500 * floor * floor };
 
         if (isFinalBoss) {
             bossName = "アビスロード";
@@ -765,9 +766,10 @@ class Game {
             this.inventory.push({ name: "ゴブリンの鉈", type: "weapon", atk: 30, req: { str: 20 }, desc: "業物だがひどく血生臭い鉈(ATK+30)" });
         }
 
-        if (Math.random() < 0.3) {
+        if (Math.random() < 0.3 || bt.isMidBoss || bt.isBoss) {
             console.log("Triggering treasure event");
-            Events.triggerTreasureEvent(this, this.generateLoot());
+            const rankBonus = (bt.isMidBoss || bt.isBoss) ? 2 : 0;
+            Events.triggerTreasureEvent(this, this.generateLoot(rankBonus));
         } else {
             console.log("Exiting battle directly");
             this.exitBattle();
@@ -1149,22 +1151,22 @@ class Game {
         ['weapon', 'armor', 'accessory'].forEach(s => {
             if (p.equipment && p.equipment[s] && p.equipment[s][stat] !== undefined) val += p.equipment[s][stat];
         });
-        // Alias for gear with 'atk', 'def', 'intBonus' etc mapping to base stats if needed
-        if (stat === 'str') {
-            ['weapon', 'armor', 'accessory'].forEach(s => {
-                if (p.equipment[s] && p.equipment[s].atk !== undefined) val += p.equipment[s].atk;
-            });
-        }
-        if (stat === 'vit') {
-            ['weapon', 'armor', 'accessory'].forEach(s => {
-                if (p.equipment[s] && p.equipment[s].def !== undefined) val += p.equipment[s].def;
-            });
-        }
-        if (stat === 'int') {
-            ['weapon', 'armor', 'accessory'].forEach(s => {
-                if (p.equipment[s] && p.equipment[s].intBonus !== undefined) val += p.equipment[s].intBonus;
-            });
-        }
+        return val;
+    }
+
+    getAtk(p) {
+        let val = this.getEffectiveStat(p, 'str');
+        ['weapon', 'armor', 'accessory'].forEach(s => {
+            if (p.equipment[s] && p.equipment[s].atk !== undefined) val += p.equipment[s].atk;
+        });
+        return val;
+    }
+
+    getDef(p) {
+        let val = this.getEffectiveStat(p, 'vit');
+        ['weapon', 'armor', 'accessory'].forEach(s => {
+            if (p.equipment[s] && p.equipment[s].def !== undefined) val += p.equipment[s].def;
+        });
         return val;
     }
 
@@ -1293,13 +1295,19 @@ class Game {
         this.playerPos.x = rx; this.playerPos.y = ry; this.updateVisited(); this.render();
     }
 
-    generateLoot() {
-        const pool = ITEMS.filter(i => i.level <= this.currentFloor + 1);
+    generateLoot(rankBonus = 0) {
+        const pool = ITEMS.filter(i => i.level <= this.currentFloor + 1 + rankBonus);
         const item = { ...pool[Math.floor(Math.random() * pool.length)] };
         if (item.type !== 'consumable') {
             const p = ITEM_PREFIXES[Math.floor(Math.random() * ITEM_PREFIXES.length)];
             item.name = p.name + item.name;
             if (item.atk) item.atk = Math.round(item.atk * p.mult);
+            if (item.def) item.def = Math.round(item.def * p.mult);
+            if (item.int) item.int = Math.round(item.int * p.mult);
+            if (item.agi) item.agi = Math.round(item.agi * p.mult);
+            if (item.vit) item.vit = Math.round(item.vit * p.mult);
+            if (item.str) item.str = Math.round(item.str * p.mult);
+            if (item.luk) item.luk = Math.round(item.luk * p.mult);
 
             // Add random status effects/resistances
             const possibleStatuses = ['poison', 'paralysis', 'confusion'];

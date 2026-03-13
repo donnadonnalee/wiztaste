@@ -77,7 +77,20 @@ const ITEMS = [
     { id: 83, name: 'ヘラクレスの帯', type: 'accessory', level: 10, str: 20, vit: 20, desc: '剛力と強靭(STR+20, VIT+20)' },
     { id: 84, name: '幸運の四葉草', type: 'accessory', level: 10, luk: 50, desc: '神がかり的な幸運(LUK+50)' },
     { id: 85, name: 'カレイドスコープ', type: 'accessory', level: 10, int: 20, luk: 20, desc: '多種多様な魔力(INT+20, LUK+20)' },
-    { id: 86, name: '世界樹の種', type: 'accessory', level: 10, hp: 100, def: 10, desc: '生命の根源(HP+100, DEF+10)' }
+    { id: 86, name: '世界樹の種', type: 'accessory', level: 10, hp: 100, def: 10, desc: '生命の根源(HP+100, DEF+10)' },
+    // Cursed Items (High risk, high reward)
+    { id: 101, name: 'カースロッド', type: 'weapon', level: 5, atk: 25, int: -80, desc: '魔力を吸い取る呪いの杖(ATK+25, INT-80)' },
+    { id: 102, name: 'カースプレート', type: 'armor', level: 5, def: 40, agi: -30, desc: '重すぎる呪いの鉄鎧(DEF+40, AGI-30)' },
+    { id: 103, name: 'ブラッドソード', type: 'weapon', level: 7, atk: 50, vit: -20, desc: '生命を糧とする魔剣(ATK+50, VIT-20)' },
+    { id: 104, name: '狂人の短剣', type: 'weapon', level: 6, atk: 30, agi: 20, luk: -50, desc: '狂気の短剣(ATK+30, AGI+20, LUK-50)' },
+    { id: 105, name: '愚者の法衣', type: 'armor', level: 4, def: 15, int: 30, str: -20, desc: '知恵と引き換えに力を失う法衣(DEF+15, INT+30, STR-20)' },
+    { id: 106, name: '死の籠手', type: 'accessory', level: 5, atk: 20, vit: -15, luk: -20, desc: '死を招く籠手(ATK+20, VIT-15, LUK-20)' },
+    { id: 107, name: '封印の古弓', type: 'weapon', level: 8, atk: 45, agi: -15, desc: '封印された古弓(ATK+45, AGI-15)' },
+    { id: 108, name: '獄炎の杖', type: 'weapon', level: 9, atk: 5, int: 60, vit: -30, desc: '持ち主を焼く獄炎の杖(ATK+5, INT+60, VIT-30)' },
+    { id: 109, name: '呪いの指輪', type: 'accessory', level: 3, str: 15, int: 15, vit: -10, agi: -10, desc: '能力を歪める指輪(STR+15, INT+15, VIT-10, AGI-10)' },
+    { id: 110, name: '強欲の魔石', type: 'accessory', level: 5, luk: 100, str: -30, vit: -30, desc: '強欲の魔石(LUK+100, STR-30, VIT-30)' },
+    { id: 111, name: '亡霊の盾', type: 'armor', level: 8, def: 50, vit: -20, desc: '実体のない盾(DEF+50, VIT-20)' },
+    { id: 112, name: '狂戦士の仮面', type: 'accessory', level: 7, atk: 40, def: -20, desc: '理性を失う仮面(ATK+40, DEF-20)' }
 ];
 
 const ITEM_PREFIXES = [
